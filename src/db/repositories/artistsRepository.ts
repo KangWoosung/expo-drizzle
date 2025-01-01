@@ -1,9 +1,5 @@
 /*
 
-Prepare statement 로, 
-각 펑션 자체적으로 finalizeAsync 까지 원스탑으로 완성해준다.
-
-
 */
 
 import { useSQLiteContext } from 'expo-sqlite' 
@@ -13,10 +9,10 @@ export const useArtistsRepository = () => {
 
     async function totalCnt() {
         try{
-            const row = await db.runAsync(`
+            const row = await db.getFirstAsync(`
                 SELECT COUNT(*) AS total FROM artists;
             `)
-            console.log(row)
+            console.log('total cnt: ', row)
             if (row && typeof row === 'object' && 'total' in row) {
                 return row.total as number
             }
@@ -62,6 +58,7 @@ export const useArtistsRepository = () => {
             })
 
             await statement.finalizeAsync()
+            console.log('artist insert query completed')
         } catch(e) {
             console.error(e)
             throw e

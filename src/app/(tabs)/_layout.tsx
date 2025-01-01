@@ -60,7 +60,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="artists"
+          name="artists/index"
           options={{
             title: "Artists",
             headerStyle: {

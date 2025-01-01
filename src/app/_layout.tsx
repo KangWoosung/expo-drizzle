@@ -28,6 +28,7 @@ import {initDatabase} from "../db";
 import { queryClient } from "@/libs/query-client";
 import { DB_NAME } from "@/constants/db";
 import MigrationFallback from "@/components/fallbacks/MigrationFallback";
+import { Toaster } from "@/components/Toaster";
 const defaultAvatar = require("../assets/images/default-avatar.png");
 
 const Layout = () => {
@@ -60,6 +61,7 @@ const Layout = () => {
             </QueryClientProvider>
           </SQLiteProvider>
         </Suspense>
+        <Toaster />
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );

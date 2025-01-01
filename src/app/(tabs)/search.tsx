@@ -2,14 +2,15 @@ import { FlatList, Keyboard, Text, View } from 'react-native'
 
 import { Header } from '@/components/header'
 
-import ArtistCard from '../_components/search/ArtistCard'
-import SearchForm from '../_components/search/SearchForm'
+import ApiArtistCard from '../_components/apiresult/ApiArtistCard'
+import SearchForm from '../_components/apiform/SearchForm'
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useArtistsRepository } from '../../db'
 import { useTagsRepository } from '../../db'
 import { useSQLiteContext } from 'expo-sqlite'
+import { toast } from '@/utils/toast'
 
 interface TagResult {
   id: number;
@@ -62,6 +63,7 @@ export default function SearchPage() {
 
     try {
       await db.withTransactionAsync(async () => {
+        console.log('trying to save artist:', artist.name)
         // 1. 아티스트 저장
         await artistsRepo.insert({
           id: artist.id,
@@ -72,6 +74,9 @@ export default function SearchPage() {
           begin_date: artist['life-span']?.begin,
           end_date: artist['life-span']?.end
         })
+        console.log('artist:', artist)
+        
+        toast.show('Artist saved: ' + artist.name);
 
         // 2. 릴리스 그룹이 있다면 저장
         // if (artist['release-groups']) {
@@ -130,7 +135,7 @@ export default function SearchPage() {
       
       <FlatList
         data={data?.artists || []}
-        renderItem={({ item }) => <ArtistCard artist={item} handleSave={handleSave} />}
+        renderItem={({ item }) => <ApiArtistCard artist={item} handleSave={handleSave} />}
       />
     </View>
   )

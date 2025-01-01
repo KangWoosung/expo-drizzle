@@ -34,6 +34,22 @@ const RootStackLayout = ({ avatar, noticeCnt, colorScheme, toggleColorScheme }: 
   return(
     <Stack>
     <Stack.Screen
+      name="(tabs)/artists/detail/[id]"
+      options={{
+        headerShown: true,
+        presentation: 'modal',
+        headerBackTitle: '뒤로',
+        headerBackTitleStyle: { fontSize: 30 },
+        headerBackVisible: true,
+        headerStyle: {
+          backgroundColor: currentColors.background,
+        },
+        headerTintColor: currentColors.foreground,
+        headerTitle: "아티스트 상세",
+        headerTitleAlign: "center",
+      }}
+    />
+    <Stack.Screen
       name="(tabs)"
       options={{
         headerShown: true,

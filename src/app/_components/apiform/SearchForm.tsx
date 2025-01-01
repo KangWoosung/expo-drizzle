@@ -5,11 +5,11 @@
 import { View, TextInput } from 'react-native'
 import React, { forwardRef } from 'react'
 
-interface SearchFormProps {
+interface SearchArtistFormProps {
   onSearch: (text: string) => void;
 }
 
-const SearchForm = forwardRef<TextInput, SearchFormProps>(({ onSearch }, ref) => {
+const SearchArtistForm = forwardRef<TextInput, SearchArtistFormProps>(({ onSearch }, ref) => {
   return (
     <View className='p-8'>
       <TextInput
@@ -22,4 +22,4 @@ const SearchForm = forwardRef<TextInput, SearchFormProps>(({ onSearch }, ref) =>
   )
 })
 
-export default SearchForm
+export default SearchArtistForm
