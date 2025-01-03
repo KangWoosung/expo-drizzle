@@ -33,15 +33,15 @@ export const useAlbumsRepository = (db: SQLiteDatabase) => {
     return (result as CountResult) || { total: 0 };
   }
 
-  async function selectByArtistId(artistId: string) {
-    const result = db.getAllAsync(
+  async function selectByArtistId(artistId: string): Promise<AlbumType[]> {
+    const result = await db.getAllAsync(
       `
         SELECT * FROM releases
         WHERE artist_id = ?
      `,
       [artistId]
     );
-    return result;
+    return (result as AlbumType[]) || [];
   }
 
   async function insert(album: AlbumType) {

@@ -29,8 +29,8 @@ export const useArtistsRepository = (db: SQLiteDatabase) => {
     try {
       const result = await db.getFirstAsync(
         `
-                SELECT * FROM artists
-                WHERE id = ?
+        SELECT * FROM artists
+        WHERE id = ?
             `,
         [id]
       );
@@ -44,8 +44,8 @@ export const useArtistsRepository = (db: SQLiteDatabase) => {
   async function insert(artist: any) {
     try {
       const statement = await db.prepareAsync(`
-                INSERT INTO artists (id, name, country, type, disambiguation, begin_date, end_date)
-                VALUES ($id, $name, $country, $type, $disambiguation, $begin_date, $end_date); 
+            INSERT INTO artists (id, name, country, type, disambiguation, begin_date, end_date)
+            VALUES ($id, $name, $country, $type, $disambiguation, $begin_date, $end_date); 
             `);
 
       await statement.executeAsync({
@@ -70,8 +70,8 @@ export const useArtistsRepository = (db: SQLiteDatabase) => {
     try {
       await db.runAsync(
         `
-                DELETE FROM artists
-                WHERE id = ?
+        DELETE FROM artists
+        WHERE id = ?
             `,
         [id]
       );

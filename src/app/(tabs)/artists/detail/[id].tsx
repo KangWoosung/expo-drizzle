@@ -40,15 +40,18 @@ A. insert into artists 처리 transaction:
   }
 B. insert into releases (albums) 처리 transaction:
   1. Insert into releases table
-  2. if(release.tags) {
+  2. if(release.tags) { albums 에는 태그가 없다. 없다고 믿자. }
   2-1. Insert into tags table
   2-2. Insert into release_tags table
   }
 C. insert into recordings (tracks) 처리 transaction:
-  1. Insert into recordings table
+  1. Insert into recordings table             -- 트랙 insert
+      length          : media[i].tracks[i].length
   2. track 과 album 의 관계 테이블에 insert 해줘야 한다. 
-  2-1. Insert into release_recordings
+  2-1. Insert into release_recordings         -- 앨범과 트랙의 관계 테이블에 insert
   2-2. track position, disc number 를 넣어줘야 한다.
+      track_position  : media[i].tracks[i].position
+      disc_number     : 이건 무시하자 default 1 임.
   3. if(recording.tags) {
   3-1. Insert into tags table
   3-2. Insert into recording_tags table
@@ -64,6 +67,10 @@ B. insert into releases (albums) 처리 transaction:
   2. if(release.tags) {
   앨범에는 태그가 없다. 없다고 믿자.
   }
+
+2025-01-03 21:39:34
+그리고 한가지 더...
+DB 와 API 를 토글 해줘야 한다. 
 
 */
 
@@ -86,18 +93,25 @@ const ArtistDetail = () => {
   const { id } = useLocalSearchParams();
   // artistId를 항상 문자열로 처리하도록 변환
   const artistId = Array.isArray(id) ? id[0] : id;
-  const [shouldFetchAlbums, setShouldFetchAlbums] = useState(false);
+  // const [shouldFetchAlbums, setShouldFetchAlbums] = useState(false);
   const [showApiTrigger, setShowApiTrigger] = useState(true);
   const [showDbTrigger, setShowDbTrigger] = useState(false);
   const [apiAlbumsCnt, setApiAlbumsCnt] = useState<number>(0);
   const [DBAlbumsCnt, setDBAlbumsCnt] = useState<number>(0);
+  const [albumsData, setAlbumsData] = useState<AlbumType[] | null>(null);
+  const [activeSource, setActiveSource] = useState<string>("");
   const db = useSQLiteContext();
   const albumsRepository = useAlbumsRepository(db);
   console.log("artistId:", artistId);
-  console.log("shouldFetchAlbums:", shouldFetchAlbums);
+  console.log("showApiTrigger:", showApiTrigger);
+  console.log("showDbTrigger:", showDbTrigger);
 
   // API Query
-  const { data, isLoading, error } = useQuery({
+  const {
+    data: apiData,
+    isLoading: apiIsLoading,
+    error: apiError,
+  } = useQuery({
     queryKey: ["searchAlbum", artistId],
     queryFn: async () => {
       const response = await fetch(
@@ -117,10 +131,27 @@ const ArtistDetail = () => {
       });
       return sortedData;
     },
-    enabled: shouldFetchAlbums, // 이 옵션을 추가
+    enabled: showApiTrigger, // 이 옵션을 추가
   });
 
   // DB Query
+  const {
+    data: dbData,
+    isLoading: dbIsLoading,
+    error: dbError,
+  } = useQuery({
+    queryKey: ["getAlbums", artistId],
+    queryFn: async () => {
+      try {
+        const result = await albumsRepository.selectByArtistId(artistId);
+        return result;
+      } catch (error) {
+        console.error("Error getting albums:", error);
+        return [];
+      }
+    },
+    enabled: showDbTrigger,
+  });
 
   // Save Album to DB
   const handleSave = async (album: AlbumType, artistId: string) => {
@@ -140,43 +171,56 @@ const ArtistDetail = () => {
     }
   };
 
-  // Update API Albums Count
-  useEffect(() => {
-    if (data?.releases && data.releases.length > 0) {
-      setApiAlbumsCnt(data.releases.length);
-    }
-    console.log("받아온 data:", data);
-  }, [data, isLoading]);
-
   // Update DB Albums Count
+  // useEffect(() => {
+  //   const getAlbumsCount = async () => {
+  //     try {
+  //       // artistId가 undefined인 경우 처리
+  //       if (!artistId) {
+  //         console.error("Artist ID is missing");
+  //         return;
+  //       }
+  //       const row = await albumsRepository.selectCountByArtistId(artistId);
+  //       row && setDBAlbumsCnt(row.total);
+  //     } catch (error) {
+  //       console.error("Error getting albums count:", error);
+  //     }
+  //   };
+  //   getAlbumsCount();
+  // }, [DBAlbumsCnt]);
+
+  // dbData Monitoring
+
   useEffect(() => {
-    const getAlbumsCount = async () => {
-      try {
-        // artistId가 undefined인 경우 처리
-        if (!artistId) {
-          console.error("Artist ID is missing");
-          return;
-        }
-        const row = await albumsRepository.selectCountByArtistId(artistId);
-        row && setDBAlbumsCnt(row.total);
-      } catch (error) {
-        console.error("Error getting albums count:", error);
-      }
-    };
-    getAlbumsCount();
-  }, [showDbTrigger]);
+    console.log("dbData:", dbData);
+  }, [dbData]);
 
   // Fetch & UI Re-rendering
   const retrieveApiAlbums = async () => {
-    setShouldFetchAlbums(true);
-    setShowApiTrigger(false);
+    setActiveSource("api");
+    await setShowDbTrigger(false);
+    await setShowApiTrigger(true);
+    await setAlbumsData(apiData?.releases || []);
+    apiData && setApiAlbumsCnt(apiData?.releases.length);
+  };
+
+  // Query DB & UI Re-rendering
+  const retrieveDBAlbums = async () => {
+    setActiveSource("db");
+    await setShowDbTrigger(true);
+    await setShowApiTrigger(false);
+    await setAlbumsData(dbData || []);
+    dbData && setDBAlbumsCnt(dbData.length);
   };
 
   return (
     <View className="flex-1">
       <RetrieveDBAlbums
-        setShouldFetchAlbums={setShouldFetchAlbums}
+        retrieveDBAlbums={retrieveDBAlbums}
+        showDbTrigger={showDbTrigger}
         DBAlbumsCnt={DBAlbumsCnt}
+        setActiveSource={setActiveSource}
+        activeSource={activeSource}
       />
 
       <RetrieveApiAlbums
@@ -184,9 +228,11 @@ const ArtistDetail = () => {
         setShowApiTrigger={setShowApiTrigger}
         retrieveApiAlbums={retrieveApiAlbums}
         apiAlbumsCnt={apiAlbumsCnt}
+        setActiveSource={setActiveSource}
+        activeSource={activeSource}
       />
 
-      {isLoading ? (
+      {apiIsLoading ? (
         <Card className="w-full max-w-md mx-auto my-4">
           <CardContent className="py-4">
             <Text>앨범 데이터를 가져오는 중...</Text>
@@ -194,7 +240,7 @@ const ArtistDetail = () => {
         </Card>
       ) : (
         <FlatList
-          data={data?.releases || []}
+          data={albumsData || []}
           renderItem={({ item }) => (
             <ApiAlbumCard
               album={item}
