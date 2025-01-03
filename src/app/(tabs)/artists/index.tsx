@@ -1,32 +1,21 @@
 /*
 2024-12-30 09:49:06
 
+인피니트 스크롤을 구현해줘야 한다.
 Infinite Scroll w. SQLite getEachAsync Example:
 https://carrithers.me/building-an-infinitely-scrolling-search-component-with-expo-react-native-and-sqlite
 
+다음 주차에 시도해보기로 하자.
 
-    <View className="p-4 border-b border-gray-200 dark:border-gray-700">
-      <Text className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-        {item.name}
-      </Text>
-      {item.country && (
-        <Text className="text-sm text-gray-600 dark:text-gray-400">
-          {item.country}
-        </Text>
-      )}
-      {item.type && (
-        <Text className="text-sm text-gray-500 dark:text-gray-500">
-          {item.type}
-        </Text>
-      )}
-    </View>
+여기는, DB 의 Artists 목록을 출력해주는 페이지입니당.
+
 */
 
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { AlbumType, ArtistType, TrackType } from "@/types/index";
-import { ArtistCard } from "@/app/_components/cards/ArtistCard";
+import { ArtistCard } from "@/app/_components/dbresults/ArtistCard";
 import { toast } from "@/utils/toast";
 
 type ArtistDataType = {
@@ -49,9 +38,6 @@ const Artists = () => {
       console.log("loadArtists:", currentOffset);
       const artistsList: ArtistType[] = [];
 
-      // for await (const row of db.getEachAsync('SELECT * FROM test')) {
-      //   console.log(row.id, row.value, row.intValue);
-      // }
       for await (const row of db.getEachAsync("SELECT * FROM artists")) {
         if (row && typeof row === "object") {
           artistsList.push(row as ArtistType);

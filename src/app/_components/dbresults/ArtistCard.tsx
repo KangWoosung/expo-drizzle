@@ -27,19 +27,23 @@ import { AlbumType, ArtistType } from "@/types";
 import { useSQLiteContext } from "expo-sqlite";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { TagType } from "@/types/tagType";
+import Tags from "./_components/Tags";
 
 type ArtistCardProps = {
   artist: ArtistType;
   deleteArtist: (id: string) => void;
 };
+type AlbumCountType = {
+  albumsCnt: number;
+};
 
 export function ArtistCard({ artist, deleteArtist }: ArtistCardProps) {
   const db = useSQLiteContext();
   const [albumsCnt, setAlbumsCnt] = useState<number>(0);
+  const [tags, setTags] = useState<string[]>([]); // 태그 상태 추가
+
   // 현재 artist 의 앨범 count 를 가져온다.
-  type AlbumCountType = {
-    albumsCnt: number;
-  };
   useEffect(() => {
     const getAlbumsCount = async () => {
       try {
@@ -53,6 +57,20 @@ export function ArtistCard({ artist, deleteArtist }: ArtistCardProps) {
       }
     };
     getAlbumsCount();
+    const getArtistTags = async (artistId: string) => {
+      try {
+        const result = await db.getAllAsync<TagType>(
+          `SELECT name FROM tags WHERE id IN (SELECT tag_id FROM artist_tags WHERE artist_id = ?)`,
+          [artistId]
+        );
+        setTags(result.map((row) => row.name)); // 태그 배열로 변환하여 저장
+        console.log("tags:", tags);
+        console.log("tags....");
+      } catch (error) {
+        console.error("Error getting tags:", error);
+      }
+    };
+    getArtistTags(artist.id);
   }, [artist.id]);
 
   return (
@@ -142,6 +160,7 @@ export function ArtistCard({ artist, deleteArtist }: ArtistCardProps) {
             </Text>
           </View>
         )}
+        {tags && tags.length > 0 && <Tags tags={tags} />}
         <View className="flex flex-row justify-between items-left">
           <Badge variant="secondary" className="w-fit">
             <Text>ID: {artist.id}</Text>

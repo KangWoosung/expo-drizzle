@@ -1,10 +1,19 @@
-
 export type AlbumType = {
-    id: string;
-    title: string;
-    artist: string;
-    type: string;
-    primary_type: string;
-    first_release_date: string;
-    tags?: { name: string, count: number }[];
-  }
+  id: string;
+  title: string;
+  status: string;
+  country: string;
+  date: string;
+  packaging: string;
+  disambiguation?: string;
+  asin?: string;
+  quality?: string;
+  barcode?: string;
+  packagingId?: string;
+  statusId?: string;
+  artistId?: string;
+};
+
+export type ReleasesType = {
+  releases: AlbumType[];
+};
