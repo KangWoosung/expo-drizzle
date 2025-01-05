@@ -15,7 +15,7 @@ import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { AlbumType, ArtistType, TrackType } from "@/types/index";
-import { ArtistCard } from "@/app/_components/dbresults/ArtistCard";
+import { DBArtistCard } from "@/app/_components/dbresults/DBArtistCard";
 import { toast } from "@/utils/toast";
 
 type ArtistDataType = {
@@ -111,7 +111,7 @@ const Artists = () => {
   };
 
   const renderItem = ({ item }: { item: ArtistType }) => (
-    <ArtistCard artist={item} deleteArtist={deleteArtist} key={item.id} />
+    <DBArtistCard artist={item} deleteArtist={deleteArtist} key={item.id} />
   );
 
   if (isLoading) {

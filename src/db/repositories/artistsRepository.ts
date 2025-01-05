@@ -25,7 +25,7 @@ export const useArtistsRepository = (db: SQLiteDatabase) => {
     //
   }
 
-  async function selectById(id: number) {
+  async function selectById(id: string) {
     try {
       const result = await db.getFirstAsync(
         `

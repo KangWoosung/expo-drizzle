@@ -1,77 +1,17 @@
-/*
-2024-12-30 22:35:29
-
-album 받아오기를 어떻게 할 것 인가..
-1. tanstack 으로 백그라운드 처리
-2. 별도의 페이지로 이동한 후, 앨범 하나씩 insert action 처리
-
-어떤 방법이 어울릴까..
-1. tanstack 으로 백그라운드 처리하기로 결정한다. 일 더 만들지 말고 빠르게 가자.
-
-album API URL:
-https://musicbrainz.org/ws/2/release?artist=b7442f18-d9be-4185-8b51-482510046156&fmt=json
-
-그리고, album 의 id 로 api 에 쿼리하는 tracks API URL:
-https://musicbrainz.org/ws/2/release/aaf6b030-049a-48e4-a636-6039f0d32a99?inc=recordings&fmt=json
-
-*/
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Text, View } from "react-native";
-import { useEffect, useState } from "react";
-import { Pressable } from "react-native-gesture-handler";
-import { useQuery } from "@tanstack/react-query";
-import { AlbumType, ArtistType } from "@/types";
-import { useSQLiteContext } from "expo-sqlite";
-import { Link } from "expo-router";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useArtistAlbumZustand } from "@/contexts/ArtistAlbumZustand";
+import { AlbumType } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import { TagType } from "@/types/tagType";
-import Tags from "./_components/Tags";
+import { Link } from "expo-router";
+import { Image, Pressable, Text, View } from "react-native";
 
-type ArtistCardProps = {
-  artist: ArtistType;
-  deleteArtist: (id: string) => void;
-};
-type AlbumCountType = {
-  albumsCnt: number;
-};
+interface DBAlbumCardProps {
+  album: AlbumType;
+}
 
-export function ArtistCard({ artist, deleteArtist }: ArtistCardProps) {
-  const db = useSQLiteContext();
-  const [albumsCnt, setAlbumsCnt] = useState<number>(0);
-  const [tags, setTags] = useState<string[]>([]); // 태그 상태 추가
-
-  // 현재 artist 의 앨범 count 를 가져온다.
-  useEffect(() => {
-    const getAlbumsCount = async () => {
-      try {
-        const row = await db.getFirstAsync(
-          `SELECT COUNT(*) AS albumsCnt FROM releases WHERE artist_id = ?`,
-          [artist.id]
-        );
-        row && setAlbumsCnt((row as AlbumCountType).albumsCnt);
-      } catch (error) {
-        console.error("Error getting albums count:", error);
-      }
-    };
-    getAlbumsCount();
-    const getArtistTags = async (artistId: string) => {
-      try {
-        const result = await db.getAllAsync<TagType>(
-          `SELECT name FROM tags WHERE id IN (SELECT tag_id FROM artist_tags WHERE artist_id = ?)`,
-          [artistId]
-        );
-        setTags(result.map((row) => row.name)); // 태그 배열로 변환하여 저장
-        console.log("tags:", tags);
-        console.log("tags....");
-      } catch (error) {
-        console.error("Error getting tags:", error);
-      }
-    };
-    getArtistTags(artist.id);
-  }, [artist.id]);
+export default function DBAlbumCard({ album }: DBAlbumCardProps) {
+  const { artistObj: artist } = useArtistAlbumZustand();
 
   return (
     <Card className="w-full max-w-md mx-auto my-4 ">
@@ -160,15 +100,12 @@ export function ArtistCard({ artist, deleteArtist }: ArtistCardProps) {
             </Text>
           </View>
         )}
-        {tags && tags.length > 0 && <Tags tags={tags} />}
+        {/* {tags && tags.length > 0 && <Tags tags={tags} />} */}
         <View className="flex flex-row justify-between items-left">
           <Badge variant="secondary" className="w-fit">
             <Text>ID: {artist.id}</Text>
           </Badge>
-          <Pressable
-            className="px-3 py-2 border rounded-md"
-            onPress={() => deleteArtist(artist.id)}
-          >
+          <Pressable className="px-3 py-2 border rounded-md" onPress={() => {}}>
             <Ionicons name="trash-outline" size={20} color={"#295491"} />
           </Pressable>
         </View>

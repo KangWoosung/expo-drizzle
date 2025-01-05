@@ -1,69 +1,104 @@
-import { useSQLiteContext } from 'expo-sqlite' 
+/*
+2025-01-05 21:08:15
 
-export const useTracksRepository = () => {
-    const db = useSQLiteContext()
+-- Recordings table (tracks)
+CREATE TABLE recordings (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    length INTEGER,  -- duration in milliseconds
+    disambiguation TEXT,
+    artist_id TEXT,
+    FOREIGN KEY(artist_id) REFERENCES artists(id)
+);
+-- Release-Recording relationship table (album-table)
+CREATE TABLE release_recordings (
+    release_id TEXT,
+    recording_id TEXT,
+    track_position INTEGER,
+    disc_number INTEGER DEFAULT 1,
+    PRIMARY KEY (release_id, recording_id),
+    FOREIGN KEY(release_id) REFERENCES releases(id),
+    FOREIGN KEY(recording_id) REFERENCES recordings(id)
+);
+-- Recording Tags relationship table
+CREATE TABLE recording_tags (
+    recording_id TEXT,
+    tag_id INTEGER,
+    count INTEGER DEFAULT 1,
+    PRIMARY KEY (recording_id, tag_id),
+    FOREIGN KEY(recording_id) REFERENCES recordings(id),
+    FOREIGN KEY(tag_id) REFERENCES tags(id)
+);
 
-    function totalCnt() {
-        const statement = db.prepareSync(`
-            SELECT COUNT(*) AS total FROM tracks;
-        `)
+*/
 
-        const result = statement.executeSync()
-        const row = result.getFirstSync()
-        if (row && typeof row === 'object' && 'total' in row) {
-            return row.total as number
-        }
-        return 0
+import { TrackType } from "@/types";
+import { TagType } from "@/types/tagType";
+import { SQLiteDatabase, useSQLiteContext } from "expo-sqlite";
+
+type CountResult = {
+  total: number;
+};
+
+export const useAlbumsRepository = (db: SQLiteDatabase) => {
+  async function selectCountByAlbumId(albumId: string): Promise<CountResult> {
+    const row = db.getFirstSync(
+      `
+            SELECT COUNT(*) AS total 
+            FROM release_recordings rr
+            JOIN recordings r ON r.id = rr.recording_id
+            WHERE rr.release_id = ?
+        `,
+      [albumId]
+    );
+    if (row && typeof row === "object" && "total" in row) {
+      return { total: row.total as number };
     }
+    return { total: 0 };
+  }
 
-    function selectById(id: string) {
-        const statement = db.prepareSync(`
-            SELECT * FROM tracks
-            WHERE id = $id;
-        `)
+  // Track insert
+  async function insertTrack(track: TrackType) {
+    const statement = await db.prepareAsync(`
+            INSERT OR IGNORE INTO recordings (id, title, length, position, disambiguation, artist_id)
+            VALUES ($id, $title, $length, $position, $disambiguation, $artistId);
+        `);
 
-        const result = statement.executeSync({ $id: id })
-        return result.getFirstSync()
-    }
+    const result = statement.executeAsync({
+      $id: track.id,
+      $name: track.title,
+      $length: track.duration,
+      $position: track.position,
+      $disambiguation: track.disambiguation,
+      $artistId: track.artistId,
+    });
+    statement.finalizeAsync();
+    return result;
+  }
 
-    function selectByReleaseId(releaseId: string) {
-        const statement = db.prepareSync(`
-            SELECT * FROM tracks
-            WHERE release_id = $releaseId
-            ORDER BY position;
-        `)
+  // Tags insert
+  async function insertTags(tags: TagType[]) {
+    const statement = await db.prepareAsync(`
+                INSERT OR IGNORE INTO tags (name, count)
+                VALUES (?, ?);
+            `);
+    tags.forEach((tag) => {
+      statement.executeAsync([tag.name, tag.count || 1]);
+    });
+    statement.finalizeAsync();
+    return;
+  }
 
-        const result = statement.executeSync({ $releaseId: releaseId })
-        return result
-    }
-
-    async function insert(track: any) {
-        const statement = db.prepareSync(`
-            INSERT INTO tracks (
-                id, name, length, position, release_id
-            )
-            VALUES (
-                $id, $name, $length, $position, $releaseId
-            );
-        `)
-
-        return statement.executeAsync({
-            $id: track.id,
-            $name: track.name,
-            $length: track.length,
-            $position: track.position,
-            $releaseId: track.release_id,
-        })
-    }
-
-    async function deleteById(id: string) {
-        const statement = db.prepareSync(`
+  async function deleteTrackById(id: string) {
+    const result = db.runAsync(
+      `
             DELETE FROM tracks
-            WHERE id = $id;
-        `)
+            WHERE id = ?;
+        `,
+      [id]
+    );
+    return result;
+  }
 
-        statement.executeAsync({ $id: id })
-    }
-
-    return { totalCnt, selectById, selectByReleaseId, insert, deleteById }
-}
+  return { selectCountByAlbumId, insertTrack, insertTags, deleteTrackById };
+};

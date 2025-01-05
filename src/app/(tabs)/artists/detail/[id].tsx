@@ -71,6 +71,12 @@ B. insert into releases (albums) 처리 transaction:
 2025-01-03 21:39:34
 그리고 한가지 더...
 DB 와 API 를 토글 해줘야 한다. 
+각 State data 들.. 
+1. DB 에서 가져온 앨범 데이터
+2. DB 에서 가져온 앨범 데이터 개수
+  현재 State 에 관계없이 항상 필요하다.
+3. API 에서 가져온 앨범 데이터
+
 
 */
 
@@ -82,29 +88,45 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useQuery } from "@tanstack/react-query";
 import ApiAlbumCard from "@/app/_components/apiresults/ApiAlbumCard";
 import { FlatList } from "react-native";
-import { AlbumType, ReleasesType } from "@/types";
+import { AlbumType, ArtistType, ReleasesType } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import RetrieveApiAlbums from "@/app/_components/apiform/RetrieveApiAlbums";
 import RetrieveDBAlbums from "@/app/_components/dbresults/RetrieveDBAlbums";
 import { useAlbumsRepository } from "@/db/repositories/albumsRepository";
 import { toast } from "@/utils/toast";
+import { useArtistAlbumZustand } from "@/contexts/ArtistAlbumZustand";
+import { useArtistsRepository } from "@/db";
 
 const ArtistDetail = () => {
   const { id } = useLocalSearchParams();
   // artistId를 항상 문자열로 처리하도록 변환
   const artistId = Array.isArray(id) ? id[0] : id;
-  // const [shouldFetchAlbums, setShouldFetchAlbums] = useState(false);
-  const [showApiTrigger, setShowApiTrigger] = useState(true);
+  const [showApiTrigger, setShowApiTrigger] = useState(false);
   const [showDbTrigger, setShowDbTrigger] = useState(false);
   const [apiAlbumsCnt, setApiAlbumsCnt] = useState<number>(0);
   const [DBAlbumsCnt, setDBAlbumsCnt] = useState<number>(0);
   const [albumsData, setAlbumsData] = useState<AlbumType[] | null>(null);
   const [activeSource, setActiveSource] = useState<string>("");
   const db = useSQLiteContext();
+  const artistsRepository = useArtistsRepository(db);
   const albumsRepository = useAlbumsRepository(db);
+  // const { setArtistId, setArtistObj } = useArtistAlbumZustand();
   console.log("artistId:", artistId);
   console.log("showApiTrigger:", showApiTrigger);
   console.log("showDbTrigger:", showDbTrigger);
+
+  // useEffect : artistId, artistObj 를 전역 상태로 로드한다.
+  useEffect(() => {
+    if (!artistId) return;
+    // setArtistId(artistId);
+    // const loadArtistContext = async () => {
+    //   const artistObj = (await artistsRepository.selectById(
+    //     artistId
+    //   )) as ArtistType;
+    //   artistObj && setArtistObj(artistObj);
+    // };
+    // loadArtistContext();
+  }, [artistId]);
 
   // API Query
   const {
@@ -129,6 +151,7 @@ const ArtistDetail = () => {
       sortedData.releases = result.releases.sort((a, b) => {
         return a.date > b.date ? 1 : -1;
       });
+      setAlbumsData(sortedData.releases);
       return sortedData;
     },
     enabled: showApiTrigger, // 이 옵션을 추가
@@ -144,6 +167,7 @@ const ArtistDetail = () => {
     queryFn: async () => {
       try {
         const result = await albumsRepository.selectByArtistId(artistId);
+        setAlbumsData(result);
         return result;
       } catch (error) {
         console.error("Error getting albums:", error);
@@ -151,6 +175,25 @@ const ArtistDetail = () => {
       }
     },
     enabled: showDbTrigger,
+  });
+
+  // DB Count Query
+  const {
+    data: dbCountData,
+    isLoading: dbCountIsLoading,
+    error: dbCountError,
+  } = useQuery({
+    queryKey: ["getAlbumsCount", artistId],
+    queryFn: async () => {
+      try {
+        const result = await albumsRepository.selectCountByArtistId(artistId);
+        setDBAlbumsCnt(result.total);
+        return result;
+      } catch (error) {
+        console.error("Error getting albums count:", error);
+        return { total: 0 };
+      }
+    },
   });
 
   // Save Album to DB
@@ -171,47 +214,24 @@ const ArtistDetail = () => {
     }
   };
 
-  // Update DB Albums Count
-  // useEffect(() => {
-  //   const getAlbumsCount = async () => {
-  //     try {
-  //       // artistId가 undefined인 경우 처리
-  //       if (!artistId) {
-  //         console.error("Artist ID is missing");
-  //         return;
-  //       }
-  //       const row = await albumsRepository.selectCountByArtistId(artistId);
-  //       row && setDBAlbumsCnt(row.total);
-  //     } catch (error) {
-  //       console.error("Error getting albums count:", error);
-  //     }
-  //   };
-  //   getAlbumsCount();
-  // }, [DBAlbumsCnt]);
-
-  // dbData Monitoring
-
-  useEffect(() => {
-    console.log("dbData:", dbData);
-  }, [dbData]);
-
   // Fetch & UI Re-rendering
   const retrieveApiAlbums = async () => {
     setActiveSource("api");
-    await setShowDbTrigger(false);
-    await setShowApiTrigger(true);
-    await setAlbumsData(apiData?.releases || []);
+    setAlbumsData(null);
+    setShowDbTrigger(false);
+    setShowApiTrigger(true);
     apiData && setApiAlbumsCnt(apiData?.releases.length);
   };
 
   // Query DB & UI Re-rendering
   const retrieveDBAlbums = async () => {
     setActiveSource("db");
-    await setShowDbTrigger(true);
-    await setShowApiTrigger(false);
-    await setAlbumsData(dbData || []);
-    dbData && setDBAlbumsCnt(dbData.length);
+    setAlbumsData(null);
+    setShowDbTrigger(true);
+    setShowApiTrigger(false);
   };
+  // console.log("apiIsLoading:", apiIsLoading);
+  // console.log("dbIsLoading:", dbIsLoading);
 
   return (
     <View className="flex-1">
@@ -232,7 +252,7 @@ const ArtistDetail = () => {
         activeSource={activeSource}
       />
 
-      {apiIsLoading ? (
+      {apiIsLoading || dbIsLoading ? (
         <Card className="w-full max-w-md mx-auto my-4">
           <CardContent className="py-4">
             <Text>앨범 데이터를 가져오는 중...</Text>
