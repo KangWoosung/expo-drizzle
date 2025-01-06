@@ -22,7 +22,7 @@ export const useArtistsRepository = (db: SQLiteDatabase) => {
   }
 
   function selectRange(start: number, end: number) {
-    //
+    //  아직 준비중입니다.
   }
 
   async function selectById(id: string) {
@@ -44,9 +44,9 @@ export const useArtistsRepository = (db: SQLiteDatabase) => {
   async function insert(artist: any) {
     try {
       const statement = await db.prepareAsync(`
-            INSERT INTO artists (id, name, country, type, disambiguation, begin_date, end_date)
-            VALUES ($id, $name, $country, $type, $disambiguation, $begin_date, $end_date); 
-            `);
+        INSERT INTO artists (id, name, country, type, disambiguation, begin_date, end_date)
+        VALUES ($id, $name, $country, $type, $disambiguation, $begin_date, $end_date); 
+        `);
 
       await statement.executeAsync({
         $id: artist.id,
@@ -66,7 +66,7 @@ export const useArtistsRepository = (db: SQLiteDatabase) => {
     }
   }
 
-  async function deleteById(id: number) {
+  async function deleteById(id: string) {
     try {
       await db.runAsync(
         `

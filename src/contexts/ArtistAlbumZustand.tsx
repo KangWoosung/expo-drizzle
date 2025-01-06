@@ -11,23 +11,24 @@ import { TrackType } from "@/types/trackType";
 import { TagType } from "@/types/tagType";
 
 type ArtistAlbumZustandType = {
-  artistId: string;
-  artistObj: ArtistType;
-  albumId: string;
-  albumObj: AlbumType;
-  setArtistId: (artistId: string) => void;
-  setArtistObj: (artist: ArtistType) => void;
-  setAlbumId: (albumId: string) => void;
-  setAlbumObj: (album: AlbumType) => void;
+  artistZustandId: string;
+  artistZustandObj: ArtistType;
+  albumZustandId: string;
+  albumZustandObj: AlbumType;
+  setArtistZustandId: (artistId: string) => void;
+  setArtistZustandObj: (artist: ArtistType) => void;
+  setAlbumZustandId: (albumId: string) => void;
+  setAlbumZustandObj: (album: AlbumType) => void;
 };
 
 export const useArtistAlbumZustand = create<ArtistAlbumZustandType>((set) => ({
-  artistId: "",
-  artistObj: {} as ArtistType,
-  albumId: "",
-  albumObj: {} as AlbumType,
-  setArtistId: (artistId: string) => set({ artistId }),
-  setArtistObj: (artist: ArtistType) => set({ artistObj: artist }),
-  setAlbumId: (albumId: string) => set({ albumId }),
-  setAlbumObj: (album: AlbumType) => set({ albumObj: album }),
+  artistZustandId: "",
+  artistZustandObj: {} as ArtistType,
+  albumZustandId: "",
+  albumZustandObj: {} as AlbumType,
+  setArtistZustandId: (artistId: string) => set({ artistZustandId: artistId }),
+  setArtistZustandObj: (artist: ArtistType) =>
+    set({ artistZustandObj: artist }),
+  setAlbumZustandId: (albumId: string) => set({ albumZustandId: albumId }),
+  setAlbumZustandObj: (album: AlbumType) => set({ albumZustandObj: album }),
 }));

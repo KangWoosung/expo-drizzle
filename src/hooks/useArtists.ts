@@ -5,7 +5,6 @@ import { useSQLiteContext } from "expo-sqlite";
 export function useArtistsGetTotal() {
   const db = useSQLiteContext();
   const artistsRepo = useArtistsRepository(db);
-  const queryClient = useQueryClient();
 
   const { isPending, error, data } = useQuery({
     queryKey: ["total"],
@@ -22,7 +21,6 @@ export function useArtistsGetTotal() {
 export function useArtistsGetRange(start: number, end: number) {
   const db = useSQLiteContext();
   const artistsRepo = useArtistsRepository(db);
-  const queryClient = useQueryClient();
 
   const { isPending, error, data } = useQuery({
     queryKey: ["range", start, end],
@@ -32,10 +30,9 @@ export function useArtistsGetRange(start: number, end: number) {
   return { isPending, error, data };
 }
 
-export function useArtistsGetById(id: number) {
+export function useArtistsGetById(id: string) {
   const db = useSQLiteContext();
   const artistsRepo = useArtistsRepository(db);
-  const queryClient = useQueryClient();
 
   const { isPending, error, data } = useQuery({
     queryKey: ["id", id],
@@ -51,7 +48,17 @@ export function useAddArtist() {
   const queryClient = useQueryClient();
 
   const { isPending, mutate } = useMutation({
-    mutationFn: artistsRepo.insert,
+    mutationFn: (artist: {
+      id: string;
+      name: string;
+      country: string;
+      type: string;
+      disambiguation: string;
+      "life-span"?: {
+        begin?: string;
+        end?: string;
+      };
+    }) => artistsRepo.insert(artist),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["total"] });
     },
@@ -66,7 +73,7 @@ export function useDeleteArtist() {
   const queryClient = useQueryClient();
 
   const { isPending, mutate } = useMutation({
-    mutationFn: artistsRepo.deleteById,
+    mutationFn: (artistId: string) => artistsRepo.deleteById(artistId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["total"] });
     },

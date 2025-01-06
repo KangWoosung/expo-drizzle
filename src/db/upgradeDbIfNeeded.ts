@@ -41,7 +41,7 @@ const upgradeDbIfNeeded = async (db: SQLiteDatabase) => {
     console.log("LATEST_DB_VERSION: ", LATEST_DB_VERSION);
 
     // 초기 Init 이 누락되었다.
-    if (LATEST_DB_VERSION === 0) {
+    if (currentDbVersion === 0) {
       console.log("Initializing database");
       initialize(db);
     }

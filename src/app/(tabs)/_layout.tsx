@@ -7,10 +7,13 @@ import { Platform, StyleSheet, View } from "react-native";
 
 import { useColorScheme } from "nativewind";
 import { getColors } from "@/constants/color";
+import { useArtistAlbumZustand } from "@/contexts/ArtistAlbumZustand";
+import { router } from "expo-router";
 
 export default function TabLayout() {
   const { colorScheme } = useColorScheme();
   const currentColors = getColors(colorScheme as "light" | "dark");
+  const { artistZustandObj, artistZustandId } = useArtistAlbumZustand();
 
   return (
     <>
@@ -27,11 +30,7 @@ export default function TabLayout() {
             backgroundColor: currentColors.background,
           },
           headerTintColor: currentColors.foreground,
-          headerBackground: () => (
-            <View
-              style={StyleSheet.absoluteFill}
-            />
-          ),
+          headerBackground: () => <View style={StyleSheet.absoluteFill} />,
         }}
       >
         <Tabs.Screen
@@ -69,6 +68,26 @@ export default function TabLayout() {
             headerTintColor: currentColors.foreground,
             tabBarIcon: ({ color }) => (
               <Ionicons size={28} name="musical-notes" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="artists/detail/[id]"
+          options={{
+            title: artistZustandObj.name,
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: currentColors.background,
+            },
+            headerTintColor: currentColors.foreground,
+            headerLeft: () => (
+              <Ionicons
+                name="chevron-back"
+                size={28}
+                color={currentColors.foreground}
+                style={{ marginLeft: 10 }}
+                onPress={() => router.back()}
+              />
             ),
           }}
         />

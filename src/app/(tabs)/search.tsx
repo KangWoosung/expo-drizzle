@@ -38,7 +38,6 @@ export default function SearchPage() {
 
     return () => {
       Keyboard.dismiss();
-      db.closeAsync(); // 컴포넌트 언마운트 시 명시적으로 닫기
     };
   }, []);
 
@@ -80,8 +79,6 @@ export default function SearchPage() {
           type: artist.type,
           country: artist.country,
           disambiguation: artist.disambiguation,
-          begin_date: artist["life-span"]?.begin,
-          end_date: artist["life-span"]?.end,
         });
         console.log("artist:", artist);
 
@@ -101,8 +98,12 @@ export default function SearchPage() {
         // 4. 토스트 메시지
         toast.show("Artist saved: " + artist.name);
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving artist:", error);
+      toast.show(
+        "Artist save failed: " +
+          (error instanceof Error ? error.message : String(error))
+      );
       throw error;
     } finally {
       console.log("Artist saved:", artist.name);

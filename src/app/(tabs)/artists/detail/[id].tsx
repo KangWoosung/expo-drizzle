@@ -110,7 +110,12 @@ const ArtistDetail = () => {
   const db = useSQLiteContext();
   const artistsRepository = useArtistsRepository(db);
   const albumsRepository = useAlbumsRepository(db);
-  // const { setArtistId, setArtistObj } = useArtistAlbumZustand();
+  const {
+    setArtistZustandId,
+    setArtistZustandObj,
+    artistZustandObj,
+    artistZustandId,
+  } = useArtistAlbumZustand();
   console.log("artistId:", artistId);
   console.log("showApiTrigger:", showApiTrigger);
   console.log("showDbTrigger:", showDbTrigger);
@@ -118,14 +123,14 @@ const ArtistDetail = () => {
   // useEffect : artistId, artistObj 를 전역 상태로 로드한다.
   useEffect(() => {
     if (!artistId) return;
-    // setArtistId(artistId);
-    // const loadArtistContext = async () => {
-    //   const artistObj = (await artistsRepository.selectById(
-    //     artistId
-    //   )) as ArtistType;
-    //   artistObj && setArtistObj(artistObj);
-    // };
-    // loadArtistContext();
+    setArtistZustandId(artistId);
+    const loadArtistZustand = async () => {
+      const artistObj = (await artistsRepository.selectById(
+        artistId
+      )) as ArtistType;
+      artistObj && setArtistZustandObj(artistObj);
+    };
+    loadArtistZustand();
   }, [artistId]);
 
   // API Query
@@ -235,6 +240,7 @@ const ArtistDetail = () => {
 
   return (
     <View className="flex-1">
+      <Text>{artistZustandObj.name}</Text>
       <RetrieveDBAlbums
         retrieveDBAlbums={retrieveDBAlbums}
         showDbTrigger={showDbTrigger}
