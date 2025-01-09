@@ -29,6 +29,8 @@ import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { TagType } from "@/types/tagType";
 import Tags from "./_components/Tags";
+import { useColorScheme } from "nativewind";
+import { getColors } from "@/constants/color";
 
 type DBArtistCardProps = {
   artist: ArtistType;
@@ -38,10 +40,15 @@ type DBAlbumCountType = {
   albumsCnt: number;
 };
 
-export function DBArtistCard({ artist, deleteArtist }: DBArtistCardProps) {
+export default function DBArtistCard({
+  artist,
+  deleteArtist,
+}: DBArtistCardProps) {
   const db = useSQLiteContext();
   const [albumsCnt, setAlbumsCnt] = useState<number>(0);
   const [tags, setTags] = useState<string[]>([]); // 태그 상태 추가
+  const { colorScheme } = useColorScheme();
+  const currentColors = getColors(colorScheme as "light" | "dark");
 
   // 현재 artist 의 앨범 count 를 가져온다.
   useEffect(() => {
@@ -75,10 +82,17 @@ export function DBArtistCard({ artist, deleteArtist }: DBArtistCardProps) {
 
   return (
     <Card className="w-full max-w-md mx-auto my-4 ">
-      <CardHeader className="pb-2 bg-slate-50">
+      <CardHeader className="pb-2 bg-background">
         <View className="flex flex-row justify-between">
-          <CardTitle className="text-2xl font-extrabold">
-            {artist.name}
+          <CardTitle className="text-2xl font-extrabold text-foreground">
+            <Link className="mx-6" href={`../../artists/${artist.id}`}>
+              <Ionicons
+                name="arrow-down-circle-outline"
+                size={24}
+                color={"#295491"}
+              />
+              {artist.name}
+            </Link>
           </CardTitle>
           {artist.score !== undefined && (
             <View className="flex items-center space-x-1">
@@ -139,13 +153,6 @@ export function DBArtistCard({ artist, deleteArtist }: DBArtistCardProps) {
                 Albums: {artist.albumsCnt ? artist.albumsCnt : 0}
               </Text>
             </View>
-            <Link className="mx-6" href={`../../artists/detail/${artist.id}`}>
-              <Ionicons
-                name="arrow-down-circle-outline"
-                size={24}
-                color={"#295491"}
-              />
-            </Link>
           </View>
         )}
         {artist.disambiguation && (

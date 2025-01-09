@@ -32,15 +32,16 @@ export default function TabLayout() {
           headerTintColor: currentColors.foreground,
           headerBackground: () => <View style={StyleSheet.absoluteFill} />,
         }}
+        // initialRouteName="index"
       >
         <Tabs.Screen
           name="index"
           options={{
             title: "Home",
-            headerTitle: "Home Screen",
+            headerTitle: "Home Screen chopchop",
             headerShown: true,
             tabBarIcon: ({ color }) => (
-              <Ionicons size={iconSize.sm} name="home" color={color} />
+              <Ionicons size={iconSize.base} name="home" color={color} />
             ),
           }}
         />
@@ -48,33 +49,60 @@ export default function TabLayout() {
           name="search"
           options={{
             title: "Search Musicians",
-            headerShown: false,
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: currentColors.background,
+            },
+            headerTintColor: currentColors.foreground,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                size={iconSize.base}
+                name={focused ? "search-circle-outline" : "search-outline"}
+                color={color}
+              />
+            ),
+            headerLeft: () => (
+              <Ionicons
+                name="chevron-back"
+                size={28}
+                color={currentColors.foreground}
+                style={{ marginLeft: 10 }}
+                onPress={() => router.back()}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="artists"
+          options={{
+            title: "Artists Tada~",
+            headerShown: true,
             headerStyle: {
               backgroundColor: currentColors.background,
             },
             headerTintColor: currentColors.foreground,
             tabBarIcon: ({ color }) => (
-              <Ionicons size={28} name="document-text" color={color} />
+              <Ionicons
+                size={iconSize.base}
+                name="musical-notes"
+                color={color}
+              />
+            ),
+            headerLeft: () => (
+              <Ionicons
+                name="chevron-back"
+                size={28}
+                color={currentColors.foreground}
+                style={{ marginLeft: 20, marginRight: 10 }}
+                onPress={() => router.back()}
+              />
             ),
           }}
         />
-        <Tabs.Screen
-          name="artists/index"
+        {/* <Tabs.Screen
+          name="artists/[id]"
           options={{
-            title: "Artists",
-            headerStyle: {
-              backgroundColor: currentColors.background,
-            },
-            headerTintColor: currentColors.foreground,
-            tabBarIcon: ({ color }) => (
-              <Ionicons size={28} name="musical-notes" color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="artists/detail/[id]"
-          options={{
-            title: artistZustandObj.name,
+            title: artistZustandObj?.name || "Artist Detail", // 동적 타이틀 추가
             headerShown: true,
             headerStyle: {
               backgroundColor: currentColors.background,
@@ -90,8 +118,8 @@ export default function TabLayout() {
               />
             ),
           }}
-        />
-        <Tabs.Screen
+        /> */}
+        {/* <Tabs.Screen
           name="tracks"
           options={{
             title: "Tracks",
@@ -103,7 +131,7 @@ export default function TabLayout() {
               <Ionicons size={28} name="musical-notes" color={color} />
             ),
           }}
-        />
+        /> */}
       </Tabs>
       {/* <Slot /> */}
     </>

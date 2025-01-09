@@ -1,0 +1,81 @@
+{
+  "quality": "normal",
+  "asin": null,
+  "media": [
+    {
+      "track-offset": 0,
+      "format": "7\" Vinyl",
+      "title": "",
+      "track-count": 2,
+      "tracks": [
+        {
+          "id": "e3179656-731c-4152-a95f-3c57b0694a23",
+          "title": "Oh Sherrie",
+          "number": "A",
+          "position": 1,
+          "recording": {
+            "id": "569c510c-fbc8-4c19-a614-739b0fd9b8be",
+            "title": "Oh Sherrie",
+            "disambiguation": "",
+            "first-release-date": "1984",
+            "video": false,
+            "length": 225000
+          },
+          "length": 225000
+        },
+        {
+          "id": "fe76ec70-5ab0-47c6-84f5-b5196894a37e",
+          "number": "B",
+          "title": "Don't Tell Me Why You're Leaving",
+          "position": 2,
+          "recording": {
+            "title": "Don't Tell Me Why You're Leaving",
+            "id": "1c789cd3-9dff-4e90-890b-ea2331dd3a7a",
+            "video": false,
+            "length": 186000,
+            "disambiguation": "",
+            "first-release-date": "1984"
+          },
+          "length": 186000
+        }
+      ],
+      "position": 1,
+      "format-id": "1d5a48e4-e94a-36dc-84e2-0c5f9f880aa7"
+    }
+  ],
+  "title": "Oh Sherrie",
+  "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+  },
+  "packaging": "Cardboard/Paper Sleeve",
+  "barcode": "074640439179",
+  "country": "US",
+  "date": "1984",
+  "status": "Official",
+  "release-events": [
+    {
+      "area": {
+        "type": null,
+        "iso-3166-1-codes": ["US"],
+        "sort-name": "United States",
+        "disambiguation": "",
+        "type-id": null,
+        "name": "United States",
+        "id": "489ce91b-6658-3307-9877-795b68554c98"
+      },
+      "date": "1984"
+    }
+  ],
+  "id": "c9533c8e-dbdb-42b0-a5e8-5b631649336b",
+  "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+  "packaging-id": "f7101ce3-0384-39ce-9fde-fbbd0044d35f",
+  "disambiguation": "",
+  "cover-art-archive": {
+    "darkened": false,
+    "back": true,
+    "artwork": true,
+    "count": 4,
+    "front": true
+  }
+}

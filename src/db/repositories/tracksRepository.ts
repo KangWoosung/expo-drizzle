@@ -40,7 +40,7 @@ type CountResult = {
   total: number;
 };
 
-export const useAlbumsRepository = (db: SQLiteDatabase) => {
+export const useTracksRepository = (db: SQLiteDatabase) => {
   async function selectCountByAlbumId(albumId: string): Promise<CountResult> {
     const row = db.getFirstSync(
       `
@@ -55,6 +55,31 @@ export const useAlbumsRepository = (db: SQLiteDatabase) => {
       return { total: row.total as number };
     }
     return { total: 0 };
+  }
+
+  async function selectTracksByAlbumId(albumId: string): Promise<TrackType[]> {
+    const result = await db.getAllAsync(
+      `
+            SELECT r.id, r.title, r.length, r.disambiguation, r.artist_id, rr.track_position
+            FROM release_recordings rr
+            JOIN recordings r ON r.id = rr.recording_id
+            WHERE rr.release_id = ?
+            ORDER BY rr.track_position
+        `,
+      [albumId]
+    );
+    return (result as TrackType[]) || [];
+  }
+
+  async function selectTrackById(id: string): Promise<TrackType> {
+    const result = await db.getFirstAsync(
+      `
+            SELECT * FROM recordings
+            WHERE id = ?
+        `,
+      [id]
+    );
+    return (result as TrackType) || null;
   }
 
   // Track insert
@@ -100,5 +125,12 @@ export const useAlbumsRepository = (db: SQLiteDatabase) => {
     return result;
   }
 
-  return { selectCountByAlbumId, insertTrack, insertTags, deleteTrackById };
+  return {
+    selectCountByAlbumId,
+    selectTracksByAlbumId,
+    selectTrackById,
+    insertTrack,
+    insertTags,
+    deleteTrackById,
+  };
 };

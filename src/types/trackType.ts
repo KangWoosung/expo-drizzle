@@ -59,17 +59,77 @@ export type TrackType = {
   artistId: string;
 };
 
-// export type TrackType = {
-//     id: string;
-//     title: string;
-//     duration: number;
-//     position: number;
-//     artist: {
-//         id: string;
-//         name: string;
-//     };
-//     album: {
-//         id: string;
-//         title: string;
-//     };
-// }
+type TrackRecording = {
+  id: string;
+  title: string;
+  disambiguation: string;
+  "first-release-date": string;
+  video: boolean;
+  length: number;
+};
+
+type Track = {
+  id: string;
+  title: string;
+  number: string;
+  position: number;
+  recording: TrackRecording;
+  length: number;
+};
+
+type Media = {
+  "track-offset": number;
+  format: string;
+  title: string;
+  "track-count": number;
+  tracks: Track[];
+  position: number;
+  "format-id": string;
+};
+
+type TextRepresentation = {
+  language: string;
+  script: string;
+};
+
+type Area = {
+  type: null;
+  "iso-3166-1-codes": string[];
+  "sort-name": string;
+  disambiguation: string;
+  "type-id": null;
+  name: string;
+  id: string;
+};
+
+type ReleaseEvent = {
+  area: Area;
+  date: string;
+};
+
+type CoverArtArchive = {
+  darkened: boolean;
+  back: boolean;
+  artwork: boolean;
+  count: number;
+  front: boolean;
+};
+
+export type TrackDataType = {
+  quality: string;
+  asin: null;
+  media: Media[];
+  title: string;
+  "text-representation": TextRepresentation;
+  packaging: string;
+  barcode: string;
+  country: string;
+  date: string;
+  status: string;
+  "release-events": ReleaseEvent[];
+  id: string;
+  "status-id": string;
+  "packaging-id": string;
+  disambiguation: string;
+  "cover-art-archive": CoverArtArchive;
+};

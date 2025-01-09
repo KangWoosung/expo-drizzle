@@ -1,0 +1,32 @@
+📦app
+ ┣ 📂(albums)
+ ┃ ┗ 📂details
+ ┃ ┃ ┗ 📜[id].tsx
+ ┣ 📂(artists)
+ ┃ ┣ 📂detail
+ ┃ ┃ ┗ 📜[id].tsx
+ ┃ ┗ 📜index.tsx
+ ┣ 📂(tabs)
+ ┃ ┣ 📜index.tsx
+ ┃ ┣ 📜search.tsx
+ ┃ ┣ 📜tracks.tsx
+ ┃ ┗ 📜_layout.tsx
+ ┣ 📂_components
+ ┃ ┣ 📂apiform
+ ┃ ┃ ┣ 📜RetrieveApiAlbums.tsx
+ ┃ ┃ ┗ 📜SearchForm.tsx
+ ┃ ┣ 📂apiresults
+ ┃ ┃ ┣ 📜ApiAlbumCard.tsx
+ ┃ ┃ ┗ 📜ApiArtistCard.tsx
+ ┃ ┣ 📂cards
+ ┃ ┃ ┣ 📜AlbumBaseCard.tsx
+ ┃ ┃ ┗ 📜ArtistBaseCard.tsx
+ ┃ ┣ 📂dbresults
+ ┃ ┃ ┣ 📂_components
+ ┃ ┃ ┃ ┗ 📜Tags.tsx
+ ┃ ┃ ┣ 📜DBAlbumCard.tsx
+ ┃ ┃ ┣ 📜DBArtistCard.tsx
+ ┃ ┃ ┗ 📜RetrieveDBAlbums.tsx
+ ┃ ┗ 📜RootLayout.tsx
+ ┣ 📜+not-found.tsx
+ ┗ 📜_layout.tsx

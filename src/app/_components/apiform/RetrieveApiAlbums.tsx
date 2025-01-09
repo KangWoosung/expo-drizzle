@@ -43,7 +43,7 @@ const RetrieveApiAlbums = ({
             </Pressable>
           </CardContent>
         </Card>
-      ) : apiAlbumsCnt > 0 ? (
+      ) : (
         <Card className="w-full max-w-md mx-auto my-4 border-solid border-4 border-slate-500">
           <CardContent className="py-4">
             <Text className="text-xl font-base">
@@ -51,7 +51,7 @@ const RetrieveApiAlbums = ({
             </Text>
           </CardContent>
         </Card>
-      ) : null}
+      )}
     </View>
   );
 };

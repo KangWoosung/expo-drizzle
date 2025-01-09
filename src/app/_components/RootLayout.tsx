@@ -6,6 +6,7 @@ import { getColors } from "@/constants/color";
 import { appName, iconSize } from "@/constants/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { useArtistAlbumZustand } from "@/contexts/ArtistAlbumZustand";
+import { useRouter } from "expo-router";
 const defaultAvatar = require("@/assets/images/default-avatar.png");
 
 // JS 개발자는 타입선언과 펑션 파라메터의 타입지정을 스킵하시면 됩니다.
@@ -15,6 +16,7 @@ type RootStackProps = {
   colorScheme: string | undefined;
   toggleColorScheme: () => void;
   children?: React.ReactNode;
+  initialRouteName?: string;
 };
 
 const RootStackLayout = ({
@@ -22,6 +24,7 @@ const RootStackLayout = ({
   noticeCnt,
   colorScheme,
   toggleColorScheme,
+  initialRouteName,
 }: RootStackProps) => {
   const currentColors = getColors(colorScheme as "light" | "dark" | undefined);
 
@@ -31,6 +34,7 @@ const RootStackLayout = ({
   const isDarkMode = theme === "dark";
 
   const { artistZustandObj } = useArtistAlbumZustand();
+  const router = useRouter();
 
   const handleToggle = () => {
     console.log("toggleColorScheme");
@@ -38,23 +42,7 @@ const RootStackLayout = ({
   };
 
   return (
-    <Stack>
-      <Stack.Screen
-        name="(tabs)/artists/detail/"
-        options={{
-          headerShown: true,
-          presentation: "modal",
-          headerBackTitle: "뒤로",
-          headerBackTitleStyle: { fontSize: 30 },
-          headerBackVisible: true,
-          headerStyle: {
-            backgroundColor: currentColors.background,
-          },
-          headerTintColor: currentColors.foreground,
-          headerTitle: "아티스트 상세 " + artistZustandObj?.name,
-          headerTitleAlign: "center",
-        }}
-      />
+    <Stack screenOptions={{ headerShown: true }}>
       <Stack.Screen
         name="(tabs)"
         options={{
@@ -145,6 +133,46 @@ const RootStackLayout = ({
           gestureDirection: "horizontal",
         }}
       />
+      <Stack.Screen
+        name="(tabs)/index"
+        options={{
+          title: "Home",
+          headerTitle: "Home Screen 555",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="(tabs)/search"
+        options={{
+          title: "Search Musicians",
+          headerTitle: "Search Musicians",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="(artists)/index"
+        options={{
+          title: "Artists",
+        }}
+      />
+      <Stack.Screen
+        name="(artists)/detail/[id]"
+        options={{
+          title: artistZustandObj.name,
+          headerShown: true,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons
+                name="chevron-back"
+                size={iconSize.base}
+                color={currentColors.foreground}
+                className="ml-2"
+              />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
     </Stack>
   );
 };

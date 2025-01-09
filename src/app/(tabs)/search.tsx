@@ -112,7 +112,7 @@ export default function SearchPage() {
 
   return (
     <View className="flex-1">
-      <Header title="헬로월드 뮤직" subtitle="My music database" />
+      {/* <Header title="헬로월드 뮤직" subtitle="" /> */}
 
       <SearchForm ref={searchInputRef} onSearch={handleSearch} />
 
