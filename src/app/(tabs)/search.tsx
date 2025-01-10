@@ -24,6 +24,7 @@ import { useTagsRepository } from "../../db";
 import { useSQLiteContext } from "expo-sqlite";
 import { toast } from "@/utils/toast";
 import { TagType } from "@/types/tagType";
+import { MMKV } from "react-native-mmkv";
 
 export default function SearchPage() {
   const [searchStr, setSearchStr] = useState("");
@@ -32,6 +33,7 @@ export default function SearchPage() {
   const db = useSQLiteContext();
   const artistsRepo = useArtistsRepository(db);
   const tagsRepo = useTagsRepository(db);
+  const storage = new MMKV();
 
   useEffect(() => {
     // searchInputRef.current?.focus()
@@ -68,6 +70,14 @@ export default function SearchPage() {
     setSearchStr(text);
   };
 
+  const updateArtistsCnt = async () => {
+    const result = await artistsRepo.totalCnt();
+    // console.log("New artistsCnt:", result);
+    storage.set("artistsCnt", result);
+    const newVal = storage.getNumber("artistsCnt");
+    // console.log("New artistsCnt from MMKV:", newVal);
+  };
+
   async function handleSave(artist: any) {
     try {
       await db.withTransactionAsync(async () => {
@@ -95,7 +105,10 @@ export default function SearchPage() {
             );
           }
         }
-        // 4. 토스트 메시지
+        // 4. Update Artists.count
+        await updateArtistsCnt();
+
+        // 5. 토스트 메시지
         toast.show("Artist saved: " + artist.name);
       });
     } catch (error: unknown) {

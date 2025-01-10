@@ -22,6 +22,22 @@ type CountResult = {
 };
 
 export const useAlbumsRepository = (db: SQLiteDatabase) => {
+  async function totalCnt() {
+    try {
+      const row = await db.getFirstAsync(`
+                SELECT COUNT(*) AS total FROM releases;
+            `);
+      console.log("total cnt: ", row);
+      if (row && typeof row === "object" && "total" in row) {
+        return row.total as number;
+      }
+      return 0;
+    } catch (e) {
+      console.error(e);
+      return 0;
+    }
+  }
+
   async function selectCountByArtistId(artistId: string): Promise<CountResult> {
     const result = await db.getFirstAsync(
       `
@@ -82,10 +98,24 @@ export const useAlbumsRepository = (db: SQLiteDatabase) => {
     }
   }
 
+  async function deleteAlbumById(albumId: string) {
+    try {
+      const result = await db.runAsync(`DELETE FROM releases WHERE id = ?`, [
+        albumId,
+      ]);
+      console.log("Delete result:", result);
+      return result;
+    } catch (error) {
+      console.error("Error deleting album:", error);
+    }
+  }
+
   return {
+    totalCnt,
     selectCountByArtistId,
     selectByArtistId,
     selectByAlbumId,
     insert,
+    deleteAlbumById,
   };
 };

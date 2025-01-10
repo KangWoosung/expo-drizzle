@@ -95,11 +95,12 @@ import RetrieveDBAlbums from "@/app/_components/dbresults/RetrieveDBAlbums";
 import { useAlbumsRepository } from "@/db/repositories/albumsRepository";
 import { toast } from "@/utils/toast";
 import { useArtistAlbumZustand } from "@/contexts/ArtistAlbumZustand";
-import { useArtistsRepository } from "@/db";
+import { useArtistsRepository, useTracksRepository } from "@/db";
 import { getColors } from "@/constants/color";
 import { useColorScheme } from "nativewind";
 import { useArtistAlbumsApi } from "@/hooks/useArtistAlbumsApi";
 import { useArtistAlbumsDb } from "@/hooks/useArtistAlbumsDb";
+import { MMKV } from "react-native-mmkv";
 
 const ArtistDetail = () => {
   const { id } = useLocalSearchParams();
@@ -111,9 +112,11 @@ const ArtistDetail = () => {
   const [DBAlbumsCnt, setDBAlbumsCnt] = useState<number>(0);
   const [albumsData, setAlbumsData] = useState<AlbumType[] | null>(null);
   const [activeSource, setActiveSource] = useState<string>("");
+  const storage = new MMKV();
   const db = useSQLiteContext();
   const artistsRepository = useArtistsRepository(db);
   const albumsRepository = useAlbumsRepository(db);
+  const tracksRepository = useTracksRepository(db);
   const {
     setArtistZustandId,
     setArtistZustandObj,
@@ -136,6 +139,8 @@ const ArtistDetail = () => {
         artistId
       )) as ArtistType;
       artistObj && setArtistZustandObj(artistObj);
+      // MMKV Data update
+      storage.set("lastViewedArtist", JSON.stringify(artistObj));
     };
     loadArtistZustand();
   }, [artistId]);
@@ -162,6 +167,12 @@ const ArtistDetail = () => {
     setDBAlbumsCnt(albumsCnt);
   }, [albumsCnt]);
 
+  // MMKV count 업데이트
+  const updateAlbumsCnt = async () => {
+    const totalCnt = await albumsRepository.totalCnt();
+    storage.set("albumsCnt", totalCnt);
+  };
+
   // Save Album to DB
   const handleSave = async (album: AlbumType, artistId: string) => {
     console.log("handleSave:", album);
@@ -173,10 +184,34 @@ const ArtistDetail = () => {
       // 2. 앨범에는 태그가 없다. 없다고 믿자.
       // 3. Update albums count state
       setDBAlbumsCnt((prev) => prev + 1);
+      // 추가.. MMKV count 관리
+      await updateAlbumsCnt();
       // 4. 토스트 메시지
       toast.show("Album saved: " + album.title);
     } catch (error) {
       console.error("Error inserting albums:", error);
+    }
+  };
+
+  // Delete Album from DB
+  const deleteAlbum = async (albumId: string) => {
+    try {
+      // Delete album from SQLite DB
+      await albumsRepository.deleteAlbumById(albumId);
+      // Delete tracks from release_recordings table
+      await tracksRepository.deleteTracksByAlbumId(albumId);
+      // Update albums count state
+      setDBAlbumsCnt((prev) => prev - 1);
+      // DB albums data state 업데이트
+      setAlbumsData(
+        (prev) => prev?.filter((album) => album.id !== albumId) || null
+      );
+      // 추가.. MMKV count 관리
+      storage.set("albumsCnt", DBAlbumsCnt);
+      // 토스트 메시지
+      toast.show("Album deleted");
+    } catch (error) {
+      console.error("Error deleting album:", error);
     }
   };
 
@@ -249,6 +284,7 @@ const ArtistDetail = () => {
                 album={item}
                 artistId={Array.isArray(artistId) ? artistId[0] : artistId}
                 handleSave={handleSave}
+                deleteAlbum={deleteAlbum}
                 activeSource={activeSource}
               />
             )}

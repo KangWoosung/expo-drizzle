@@ -21,34 +21,34 @@ export default function DBAlbumCard({ album }: DBAlbumCardProps) {
           <CardTitle className="text-2xl font-extrabold">
             {artistObj.name}
           </CardTitle>
-          {artistObj.score !== undefined && (
+          {artistObj.score !== undefined ? (
             <View className="flex items-center space-x-1">
               <Text className="text-sm font-medium">Score:</Text>
               <Text className="text-lg font-bold">{artistObj.score}</Text>
               <Text className="text-xs text-muted-foreground">/100</Text>
             </View>
-          )}
+          ) : null}
         </View>
-        {artistObj.sort_name && artistObj.sort_name !== artistObj.name && (
+        {artistObj.sort_name && artistObj.sort_name !== artistObj.name ? (
           <Text className="text-sm text-muted-foreground">
             {artistObj.sort_name}
           </Text>
-        )}
+        ) : null}
       </CardHeader>
       <CardContent className="grid gap-4 pt-4">
-        {artistObj.type && (
+        {artistObj.type ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons name="people-outline" size={18} color={"#64748b"} />
             <Text className="text-lg text-slate-500">{artistObj.type}</Text>
           </View>
-        )}
-        {artistObj.country && (
+        ) : null}
+        {artistObj.country ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons name="flag-outline" size={18} color={"#64748b"} />
             <Text className="text-lg text-slate-500">{artistObj.country}</Text>
           </View>
-        )}
-        {(artistObj.begin_date || artistObj.end_date) && (
+        ) : null}
+        {artistObj.begin_date || artistObj.end_date ? (
           <View className="flex items-left space-x-2">
             {/* <CalendarIcon className="h-4 w-4 text-muted-foreground" /> */}
             <Text className="text-sm">
@@ -56,7 +56,7 @@ export default function DBAlbumCard({ album }: DBAlbumCardProps) {
               {artistObj.end_date || "Present"}
             </Text>
           </View>
-        )}
+        ) : null}
         {artistObj.albumsCnt ? (
           <View className="flex flex-row justify-between">
             <View className="flex flex-row items-center gap-2">
@@ -93,7 +93,7 @@ export default function DBAlbumCard({ album }: DBAlbumCardProps) {
             </Link>
           </View>
         )}
-        {artistObj.disambiguation && (
+        {artistObj.disambiguation ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons
               name="information-circle-outline"
@@ -104,7 +104,7 @@ export default function DBAlbumCard({ album }: DBAlbumCardProps) {
               {artistObj.disambiguation}
             </Text>
           </View>
-        )}
+        ) : null}
         {/* {tags && tags.length > 0 && <Tags tags={tags} />} */}
         <View className="flex flex-row justify-between items-left">
           <Badge variant="secondary" className="w-fit">

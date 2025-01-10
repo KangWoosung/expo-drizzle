@@ -38,7 +38,7 @@ export default function TabLayout() {
           name="index"
           options={{
             title: "Home",
-            headerTitle: "Home Screen chopchop",
+            headerTitle: "Home Screen",
             headerShown: true,
             tabBarIcon: ({ color }) => (
               <Ionicons size={iconSize.base} name="home" color={color} />
@@ -75,7 +75,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="artists"
           options={{
-            title: "Artists Tada~",
+            title: "Artists",
             headerShown: true,
             headerStyle: {
               backgroundColor: currentColors.background,

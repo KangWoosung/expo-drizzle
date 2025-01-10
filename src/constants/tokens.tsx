@@ -32,3 +32,5 @@ export const screenPadding = {
 };
 
 export const appName = "Hoerzu";
+
+export const appPropaganda = "The best music database on your hands";
