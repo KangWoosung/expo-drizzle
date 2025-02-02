@@ -1,10 +1,13 @@
+import {
+  ApiReleasesSchemaType,
+  InsertAlbumSchemaType,
+} from "@/zod-schemas/albums";
 import { useQuery } from "@tanstack/react-query";
-import { AlbumType, ReleasesType } from "@/types";
 
 export const useArtistAlbumsApi = (
   artistId: string,
   showApiTrigger: boolean,
-  setAlbumsData: (data: AlbumType[] | null) => void
+  setAlbumsData: (data: InsertAlbumSchemaType[] | null) => void
 ) => {
   return useQuery({
     queryKey: ["searchAlbum", artistId],
@@ -19,13 +22,13 @@ export const useArtistAlbumsApi = (
         }
       );
 
-      const result: ReleasesType = await response.json();
-      const sortedData: ReleasesType = { ...result };
+      const result: ApiReleasesSchemaType = await response.json();
+      const sortedData: ApiReleasesSchemaType = { ...result };
       sortedData.releases = result.releases.sort((a, b) => {
         return a.date > b.date ? 1 : -1;
       });
 
-      setAlbumsData(sortedData.releases);
+      setAlbumsData(sortedData.releases as InsertAlbumSchemaType[]);
       return sortedData;
     },
     enabled: showApiTrigger,

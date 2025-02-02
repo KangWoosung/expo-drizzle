@@ -1,3 +1,6 @@
+/*
+2025-01-29 18:35:47
+
 export const colors = {
   primary: "#fc3c44",
   background: "#000",
@@ -30,3 +33,19 @@ export const iconSize = {
 export const screenPadding = {
   horizontal: 24,
 };
+
+*/
+
+import { z } from "zod";
+
+const tokensSchema = z.object({
+  primary: z.string(),
+  background: z.string(),
+  text: z.string(),
+  textMuted: z.string(),
+  icon: z.string(),
+  maximumTrackTintColor: z.string(),
+  minimumTrackTintColor: z.string(),
+});
+
+export type TokensSchemaType = z.infer<typeof tokensSchema>;

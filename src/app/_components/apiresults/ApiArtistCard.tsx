@@ -2,17 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Text, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { ArtistType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { useColorScheme } from "@/libs/useColorScheme";
 import { getColors } from "@/constants/color";
+// API 데이터를 직접 핸들하므로, API Type 을 사용한다.
+import { ApiArtistSchemaType } from "@/zod-schemas/artists";
 
 export default function ApiArtistCard({
   artist,
   handleSave,
 }: {
-  artist: ArtistType;
-  handleSave: (artist: any) => void;
+  artist: ApiArtistSchemaType;
+  handleSave: (artist: ApiArtistSchemaType) => void;
 }) {
   const { colorScheme } = useColorScheme();
   const currentColors = getColors(colorScheme as "light" | "dark");
@@ -32,9 +33,9 @@ export default function ApiArtistCard({
             </View>
           ) : null}
         </View>
-        {artist.sort_name && artist.sort_name !== artist.name ? (
+        {artist.sortName && artist.sortName !== artist.name ? (
           <Text className="text-sm text-muted-foreground">
-            {artist.sort_name}
+            {artist.sortName}
           </Text>
         ) : null}
       </CardHeader>
@@ -54,10 +55,10 @@ export default function ApiArtistCard({
           </View>
         ) : null}
 
-        {artist.begin_date || artist.end_date ? (
+        {artist.beginDate || artist.endDate ? (
           <View className="flex items-left space-x-2">
             <Text className="text-sm">
-              {artist.begin_date || "Unknown"} - {artist.end_date || "Present"}
+              {artist.beginDate || "Unknown"} - {artist.endDate || "Present"}
             </Text>
           </View>
         ) : null}

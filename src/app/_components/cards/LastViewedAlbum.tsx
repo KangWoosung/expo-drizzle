@@ -6,10 +6,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Badge } from "@/components/ui/badge";
 import { useColorScheme } from "nativewind";
 import { getColors } from "@/constants/color";
-import { LastViewedAlbumType } from "@/types/lastViewedAlbum";
+import { SelectAlbumSchemaType } from "@/zod-schemas/albums";
 
 type LastViewedAlbumProps = {
-  lastAlbum: LastViewedAlbumType;
+  lastAlbum: SelectAlbumSchemaType;
 };
 
 const LastViewedAlbum = ({ lastAlbum }: LastViewedAlbumProps) => {
@@ -34,12 +34,13 @@ const LastViewedAlbum = ({ lastAlbum }: LastViewedAlbumProps) => {
       </CardHeader>
       <CardContent>
         <Text className="font-bold text-2xl mb-2">{lastAlbum?.title}</Text>
-        {lastAlbum?.date ? (
+        {/* DB Albums 에는 date 가 없다.
+         {lastAlbum?.date ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons name="calendar-outline" size={18} color={"#64748b"} />
             <Text className="text-lg text-slate-500">{lastAlbum?.date}</Text>
           </View>
-        ) : null}
+        ) : null} */}
         {lastAlbum?.disambiguation ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons
@@ -52,6 +53,7 @@ const LastViewedAlbum = ({ lastAlbum }: LastViewedAlbumProps) => {
             </Text>
           </View>
         ) : null}
+        {/* DB Albums 에는 quality 가 없다.
         {lastAlbum?.quality ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons
@@ -61,7 +63,7 @@ const LastViewedAlbum = ({ lastAlbum }: LastViewedAlbumProps) => {
             />
             <Text className="text-lg text-slate-500">{lastAlbum?.quality}</Text>
           </View>
-        ) : null}
+        ) : null} */}
         {lastAlbum?.packaging ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons

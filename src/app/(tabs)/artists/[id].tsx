@@ -85,22 +85,35 @@ import React, { useEffect, useState } from "react";
 import { router, Stack, Tabs, useLocalSearchParams } from "expo-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSQLiteContext } from "expo-sqlite";
-import { useQuery } from "@tanstack/react-query";
 import AlbumCard from "@/app/_components/cards/AlbumCard";
 import { FlatList } from "react-native";
-import { AlbumType, ArtistType, ReleasesType } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import RetrieveApiAlbums from "@/app/_components/apiform/RetrieveApiAlbums";
 import RetrieveDBAlbums from "@/app/_components/dbresults/RetrieveDBAlbums";
-import { useAlbumsRepository } from "@/db/repositories/albumsRepository";
 import { toast } from "@/utils/toast";
 import { useArtistAlbumZustand } from "@/contexts/ArtistAlbumZustand";
-import { useArtistsRepository, useTracksRepository } from "@/db";
 import { getColors } from "@/constants/color";
 import { useColorScheme } from "nativewind";
 import { useArtistAlbumsApi } from "@/hooks/useArtistAlbumsApi";
 import { useArtistAlbumsDb } from "@/hooks/useArtistAlbumsDb";
 import { MMKV } from "react-native-mmkv";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import {
+  artists as artistsTable,
+  releases as releasesTable,
+  recordings as recordingsTable,
+} from "@/db/drizzle/schema";
+import * as schema from "@/db/drizzle/schema";
+import { count, eq } from "drizzle-orm";
+import {
+  InsertAlbumSchemaType,
+  SelectAlbumSchemaType,
+} from "@/zod-schemas/albums";
+import {
+  InsertArtistSchemaType,
+  SelectArtistSchemaType,
+} from "@/zod-schemas/artists";
+import { useQuery } from "@tanstack/react-query";
 
 const ArtistDetail = () => {
   const { id } = useLocalSearchParams();
@@ -110,13 +123,14 @@ const ArtistDetail = () => {
   const [showDbTrigger, setShowDbTrigger] = useState(false);
   const [apiAlbumsCnt, setApiAlbumsCnt] = useState<number>(0);
   const [DBAlbumsCnt, setDBAlbumsCnt] = useState<number>(0);
-  const [albumsData, setAlbumsData] = useState<AlbumType[] | null>(null);
+  const [albumsData, setAlbumsData] = useState<InsertAlbumSchemaType[] | null>(
+    null
+  );
   const [activeSource, setActiveSource] = useState<string>("");
   const storage = new MMKV();
   const db = useSQLiteContext();
-  const artistsRepository = useArtistsRepository(db);
-  const albumsRepository = useAlbumsRepository(db);
-  const tracksRepository = useTracksRepository(db);
+  const drizzleDB = drizzle(db, { schema: { releases: releasesTable } });
+
   const {
     setArtistZustandId,
     setArtistZustandObj,
@@ -130,20 +144,29 @@ const ArtistDetail = () => {
   console.log("showApiTrigger:", showApiTrigger);
   console.log("showDbTrigger:", showDbTrigger);
 
-  // useEffect : artistId, artistObj 를 zustand 전역 상태로 로드한다.
-  useEffect(() => {
-    if (!artistId) return;
-    setArtistZustandId(artistId);
-    const loadArtistZustand = async () => {
-      const artistObj = (await artistsRepository.selectById(
-        artistId
-      )) as ArtistType;
-      artistObj && setArtistZustandObj(artistObj);
-      // MMKV Data update
-      storage.set("lastViewedArtist", JSON.stringify(artistObj));
-    };
-    loadArtistZustand();
-  }, [artistId]);
+  // Artist 정보를 가져오는 쿼리
+  useQuery({
+    queryKey: ["artist", artistId],
+    queryFn: async () => {
+      if (!artistId) return null;
+
+      const result = await drizzleDB
+        .select()
+        .from(artistsTable)
+        .where(eq(artistsTable.id, artistId))
+        .limit(1)
+        .execute();
+
+      const artistObj = result[0];
+      if (artistObj) {
+        setArtistZustandObj(artistObj as InsertArtistSchemaType);
+        setArtistZustandId(artistId);
+        storage.set("lastViewedArtist", JSON.stringify(artistObj));
+      }
+      return artistObj;
+    },
+    enabled: !!artistId,
+  });
 
   // API Query
   const {
@@ -169,18 +192,21 @@ const ArtistDetail = () => {
 
   // MMKV count 업데이트
   const updateAlbumsCnt = async () => {
-    const totalCnt = await albumsRepository.totalCnt();
-    storage.set("albumsCnt", totalCnt);
+    const row = await drizzleDB
+      .select({ count: count() })
+      .from(schema.releases)
+      .where(eq(schema.releases.artist_id, artistId));
+    storage.set("albumsCnt", row[0].count);
   };
 
   // Save Album to DB
-  const handleSave = async (album: AlbumType, artistId: string) => {
+  const handleSave = async (album: InsertAlbumSchemaType, artistId: string) => {
     console.log("handleSave:", album);
     // Insert into releases table
     try {
       // 1. insert into releases table
       const albumWithArtistId = { ...album, artistId };
-      await albumsRepository.insert(albumWithArtistId);
+      await drizzleDB.insert(schema.releases).values(albumWithArtistId);
       // 2. 앨범에는 태그가 없다. 없다고 믿자.
       // 3. Update albums count state
       setDBAlbumsCnt((prev) => prev + 1);
@@ -197,9 +223,13 @@ const ArtistDetail = () => {
   const deleteAlbum = async (albumId: string) => {
     try {
       // Delete album from SQLite DB
-      await albumsRepository.deleteAlbumById(albumId);
+      await drizzleDB
+        .delete(schema.releases)
+        .where(eq(schema.releases.id, albumId));
       // Delete tracks from release_recordings table
-      await tracksRepository.deleteTracksByAlbumId(albumId);
+      await drizzleDB
+        .delete(schema.recordings)
+        .where(eq(schema.recordings.id, albumId));
       // Update albums count state
       setDBAlbumsCnt((prev) => prev - 1);
       // DB albums data state 업데이트

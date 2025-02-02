@@ -2,14 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TrackObjType } from "@/types";
 import { Link } from "expo-router";
 import { formatDuration } from "@/utils/timeFormatFunctions";
+import { TrackJoinReleaseType } from "@/zod-schemas/trackJoinRelease";
 
 type ApiTrackCardProps = {
-  track: TrackObjType;
+  track: TrackJoinReleaseType;
   artistId: string;
-  handleSave: (track: TrackObjType, artistId: string) => Promise<void>;
+  handleSave: (track: TrackJoinReleaseType, artistId: string) => Promise<void>;
   activeSource: string;
   role?: string;
 };
@@ -32,26 +32,26 @@ export default function TrackCard({
       <CardContent className="grid gap-4 pt-4">
         <View className="flex flex-row items-center gap-2">
           <Ionicons name="musical-note-outline" size={18} color={"#64748b"} />
-          <Text className="text-lg text-slate-500">트랙 {track?.position}</Text>
+          <Text className="text-lg text-slate-500">
+            트랙 {track?.trackPosition}
+          </Text>
         </View>
 
         <View className="flex flex-row items-center gap-2">
           <Ionicons name="time-outline" size={18} color={"#64748b"} />
           <Text className="text-lg text-slate-500">
-            {formatDuration(track.length || track.recording?.length || 0)}
+            {formatDuration(track.length || track.length || 0)}
           </Text>
         </View>
 
-        {track.recording?.["first-release-date"] ? (
+        {track.release_date ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons name="calendar-outline" size={18} color={"#64748b"} />
-            <Text className="text-lg text-slate-500">
-              {track.recording["first-release-date"]}
-            </Text>
+            <Text className="text-lg text-slate-500">{track.release_date}</Text>
           </View>
         ) : null}
 
-        {track.recording?.disambiguation ? (
+        {track.disambiguation ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons
               name="information-circle-outline"
@@ -59,7 +59,7 @@ export default function TrackCard({
               color={"#295491"}
             />
             <Text className="text-base text-muted-foreground">
-              {track.recording.disambiguation}
+              {track.disambiguation}
             </Text>
           </View>
         ) : null}

@@ -1,66 +1,65 @@
 /*
-2024-12-30 09:49:06
+2025-01-29 21:37:15
 
-인피니트 스크롤을 구현해줘야 한다.
-Infinite Scroll w. SQLite getEachAsync Example:
-https://carrithers.me/building-an-infinitely-scrolling-search-component-with-expo-react-native-and-sqlite
-
-다음 주차에 시도해보기로 하자.
-
-여기는, DB 의 Artists 목록을 출력해주는 페이지입니당.
+drizzle 버전으로 수정하였다.
 
 */
 
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import { useSQLiteContext } from "expo-sqlite";
-import { AlbumType, ArtistType, TrackType } from "@/types/index";
 import DBArtistCard from "@/app/_components/dbresults/DBArtistCard";
 import { toast } from "@/utils/toast";
-import { Link } from "expo-router";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import { artists as artistsTable } from "@/db/drizzle/schema";
+import {
+  InsertArtistSchemaType,
+  SelectArtistSchemaType,
+} from "@/zod-schemas/artists";
+import * as schema from "@/db/drizzle/schema";
+import { eq } from "drizzle-orm";
 
-type ArtistDataType = {
-  artist: ArtistType;
-  albums: AlbumType[];
-};
-
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 const Artists = () => {
-  const [artists, setArtists] = useState<ArtistType[]>([]);
+  const [artists, setArtists] = useState<SelectArtistSchemaType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
-  const db = useSQLiteContext();
 
+  const db = useSQLiteContext();
+  const drizzleDB = drizzle(db);
+
+  // 아티스트 데이터 로드 함수
   const loadArtists = async (currentOffset: number) => {
     try {
       console.log("loadArtists:", currentOffset);
-      const artistsList: ArtistType[] = [];
 
-      for await (const row of db.getEachAsync("SELECT * FROM artists")) {
-        if (row && typeof row === "object") {
-          artistsList.push(row as ArtistType);
-          console.log("artist added:", row);
-        }
-      }
+      // Drizzle ORM을 사용하여 데이터 조회 (LIMIT와 OFFSET 적용)
+      const result = await drizzleDB
+        .select()
+        .from(artistsTable)
+        .limit(ITEMS_PER_PAGE)
+        .offset(currentOffset)
+        .execute();
 
       // 더 로드할 데이터가 있는지 확인
-      if (artistsList.length < ITEMS_PER_PAGE) {
+      if (result.length < ITEMS_PER_PAGE) {
         setHasMore(false);
       }
 
-      return artistsList;
+      return result;
     } catch (error) {
       console.error("Artists 로딩 에러:", error);
       return [];
     }
   };
 
+  // 아티스트 삭제 함수
   const deleteArtist = async (id: string) => {
     try {
-      await db.runAsync("DELETE FROM artists WHERE id = ?", [id]);
+      await drizzleDB.delete(schema.artists).where(eq(schema.artists.id, id));
       console.log("Artist deleted:", id);
       setArtists((prev) => prev.filter((artist) => artist.id !== id));
       toast.show("Artist deleted");
@@ -83,7 +82,7 @@ const Artists = () => {
     initialLoad();
   }, []);
 
-  // 추가 데이터 로드
+  // 추가 데이터 로드 (무한 스크롤)
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
 
@@ -94,11 +93,13 @@ const Artists = () => {
 
       setArtists((prev) => [...prev, ...moreArtists]);
       setOffset(nextOffset);
+      toast.show("More artists loaded");
     } finally {
       setIsLoadingMore(false);
     }
   }, [offset, isLoadingMore, hasMore]);
 
+  // 로딩 중 표시
   const renderFooter = () => {
     if (!isLoadingMore) return null;
 
@@ -111,10 +112,12 @@ const Artists = () => {
     );
   };
 
-  const renderItem = ({ item }: { item: ArtistType }) => (
+  // 아티스트 카드 렌더링
+  const renderItem = ({ item }: { item: InsertArtistSchemaType }) => (
     <DBArtistCard artist={item} deleteArtist={deleteArtist} key={item.id} />
   );
 
+  // 로딩 중 UI
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -126,12 +129,12 @@ const Artists = () => {
   return (
     <View className="flex-1">
       <FlatList
-        data={artists}
+        data={artists as InsertArtistSchemaType[]}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        // onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
+        onEndReached={loadMore} // 무한 스크롤 이벤트
+        onEndReachedThreshold={0.5} // 스크롤 위치 임계값 (0.5 = 50%)
+        ListFooterComponent={renderFooter} // 로딩 중 표시
         ListEmptyComponent={
           <View className="flex-1 justify-center items-center p-4">
             <Text className="text-gray-600 dark:text-gray-400">

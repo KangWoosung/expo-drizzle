@@ -1,13 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useArtistAlbumZustand } from "@/contexts/ArtistAlbumZustand";
-import { AlbumType } from "@/types";
+import {
+  InsertAlbumSchemaType,
+  SelectAlbumSchemaType,
+} from "@/zod-schemas/albums";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Image, Pressable, Text, View } from "react-native";
 
 interface DBAlbumCardProps {
-  album: AlbumType;
+  album: SelectAlbumSchemaType;
 }
 
 export default function DBAlbumCard({ album }: DBAlbumCardProps) {
@@ -21,17 +24,18 @@ export default function DBAlbumCard({ album }: DBAlbumCardProps) {
           <CardTitle className="text-2xl font-extrabold">
             {artistObj.name}
           </CardTitle>
+          {/* DB 에는 artists.score 가 없다.
           {artistObj.score !== undefined ? (
             <View className="flex items-center space-x-1">
               <Text className="text-sm font-medium">Score:</Text>
               <Text className="text-lg font-bold">{artistObj.score}</Text>
               <Text className="text-xs text-muted-foreground">/100</Text>
             </View>
-          ) : null}
+          ) : null} */}
         </View>
-        {artistObj.sort_name && artistObj.sort_name !== artistObj.name ? (
+        {artistObj.sortName && artistObj.sortName !== artistObj.name ? (
           <Text className="text-sm text-muted-foreground">
-            {artistObj.sort_name}
+            {artistObj.sortName}
           </Text>
         ) : null}
       </CardHeader>
@@ -48,16 +52,16 @@ export default function DBAlbumCard({ album }: DBAlbumCardProps) {
             <Text className="text-lg text-slate-500">{artistObj.country}</Text>
           </View>
         ) : null}
-        {artistObj.begin_date || artistObj.end_date ? (
+        {/* {artistObj.begin_date || artistObj.end_date ? (
           <View className="flex items-left space-x-2">
-            {/* <CalendarIcon className="h-4 w-4 text-muted-foreground" /> */}
+            // {/* <CalendarIcon className="h-4 w-4 text-muted-foreground" /> 
             <Text className="text-sm">
               {artistObj.begin_date || "Unknown"} -{" "}
               {artistObj.end_date || "Present"}
             </Text>
           </View>
-        ) : null}
-        {artistObj.albumsCnt ? (
+        ) : null} */}
+        {/* {artistObj.albumsCnt ? (
           <View className="flex flex-row justify-between">
             <View className="flex flex-row items-center gap-2">
               <Ionicons
@@ -92,7 +96,7 @@ export default function DBAlbumCard({ album }: DBAlbumCardProps) {
               />
             </Link>
           </View>
-        )}
+        )} */}
         {artistObj.disambiguation ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons

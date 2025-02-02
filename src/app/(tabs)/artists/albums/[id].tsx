@@ -28,7 +28,8 @@ result.media[0].tracks[i].recording[0]
   위치에, length, disambiguation, "first-release-date" 가 있다.
   그러므로, length 는, result.media[0].tracks[i].recording[0]["first-release-date"] 에서 가져오자.
 
-
+2025-01-31 21:03:35
+drizzle 포팅 작업 완료
 
 
 */
@@ -41,42 +42,32 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { getColors } from "@/constants/color";
 import AlbumCard from "@/app/_components/cards/AlbumCard";
-import { useAlbumsRepository } from "@/db/repositories/albumsRepository";
-import { AlbumType, TrackObjType, TrackType } from "@/types";
 import { useSQLiteContext } from "expo-sqlite";
-import { useTracksRepository } from "@/db";
-import { TagType, TrackAndTagType } from "@/types/tagType";
 import { getTracksFromApi } from "@/utils/getTracksFromApi";
 import { toast } from "@/utils/toast";
 import TrackCard from "@/app/_components/cards/TrackCard";
 import { MMKV } from "react-native-mmkv";
-
-/*
-{
-  "id": "e3179656-731c-4152-a95f-3c57b0694a23",
-  "title": "Oh Sherrie",
-  "number": "A",
-  "position": 1,
-  "length": 225000
-}
-*/
-/*
-length 가 null 일 수도 있다. 이 경우, 
-result.media[0].tracks[i].recording[0]
-  위치에, length, disambiguation, "first-release-date" 가 있다.
-  그러므로, length 는, result.media[0].tracks[i].recording[0]["first-release-date"] 에서 가져오자.
-  
-*/
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import * as schema from "@/db/drizzle/schema";
+import {
+  trackJoinReleaseSchema,
+  TrackJoinReleaseType,
+} from "@/zod-schemas/trackJoinRelease";
+import { eq } from "drizzle-orm";
+import {
+  InsertAlbumSchemaType,
+  SelectAlbumSchemaType,
+} from "@/zod-schemas/albums";
 
 const Album = () => {
   const { id } = useLocalSearchParams();
   const albumId = Array.isArray(id) ? id[0] : id;
-  const [tracks, setTracks] = useState<TrackObjType[]>([]);
+  const [tracks, setTracks] = useState<TrackJoinReleaseType[]>([]);
   const [trackCnt, setTrackCnt] = useState<number>(0);
   const storage = new MMKV();
   const db = useSQLiteContext();
-  const albumRepo = useAlbumsRepository(db);
-  const trackRepo = useTracksRepository(db);
+  const drizzleDB = drizzle(db, { schema });
+
   const { colorScheme } = useColorScheme();
   const currentColors = getColors(colorScheme as "light" | "dark");
   const {
@@ -90,21 +81,42 @@ const Album = () => {
     setAlbumZustandObj,
   } = useArtistAlbumZustand();
 
+  const getTracksWithRelease = async (trackId: string) => {
+    const result = await drizzleDB
+      .select()
+      .from(schema.recordings)
+      .leftJoin(
+        schema.releaseRecordings,
+        eq(schema.recordings.id, schema.releaseRecordings.recordingId)
+      )
+      .leftJoin(
+        schema.releases,
+        eq(schema.releaseRecordings.releaseId, schema.releases.id)
+      )
+      .where(eq(schema.recordings.id, trackId));
+
+    return trackJoinReleaseSchema.parse(result);
+  };
+
   useEffect(() => {
     if (!albumId) return;
+
     // 0. fill up Master albumCard with albumId
     const getAlbumProcess = async () => {
       setAlbumZustandId(albumId);
-      const dbAlbum = await albumRepo.selectByAlbumId(albumId);
-      setAlbumZustandObj(dbAlbum);
+      const dbAlbum = await drizzleDB
+        .select()
+        .from(schema.releases)
+        .where(eq(schema.releases.id, albumId));
+      setAlbumZustandObj(dbAlbum[0] as InsertAlbumSchemaType);
       // MMKV Data update
       storage.set("lastViewedAlbum", JSON.stringify(dbAlbum));
     };
     // 1. try to get Track data from DB, if not, try to get from API
     const getTracks = async () => {
       // get tracks from DB
-      const dbTracks = await trackRepo.selectTracksByAlbumId(albumId);
-      if (dbTracks.length > 0) {
+      const dbTracks = await getTracksWithRelease(albumId);
+      if (dbTracks && dbTracks?.length > 0) {
         setTracks(dbTracks);
         setTrackCnt(dbTracks.length);
         console.log("Tracks from DB:", dbTracks.length);
@@ -130,26 +142,31 @@ const Album = () => {
 
   // Update MMKV Count
   const updateTracksCnt = async () => {
-    const newTotalCnt = await trackRepo.totalCnt();
+    const newTotalCnt = tracks.length;
     storage.set("tracksCnt", newTotalCnt);
   };
 
   // 2. save Track data to DB as soon as it is fetched from API
-  const saveTracksToDb = async (tracks: TrackObjType[], artistId: string) => {
-    // console.log("Before Transaction to save tracks to DB");
+  const saveTracksToDb = async (
+    tracks: TrackJoinReleaseType[],
+    artistId: string
+  ) => {
     db.withTransactionAsync(async () => {
       try {
-        // console.log("before foreach loop", tracks[1].title);
         // foreach 는 async await 와 함께 사용할 수 없다.
         for (const track of tracks) {
-          const result1 = await trackRepo.insertTrack(track, artistId);
-          // console.log("Track inserted:", result1);
-          // release_recordings 테이블이 누락되었다.
-          const result2 = await trackRepo.insertReleaseRecordings(
-            albumId,
-            track.id,
-            track.position
-          );
+          // 트랙 저장
+          const result1 = await drizzleDB
+            .insert(schema.recordings)
+            .values(track);
+          // 앨범-트랙 저장
+          const result2 = await drizzleDB
+            .insert(schema.releaseRecordings)
+            .values({
+              releaseId: albumId,
+              recordingId: track.id,
+              trackPosition: track.trackPosition || 1,
+            });
         }
         // Update MMKV Count
         await updateTracksCnt();
@@ -184,7 +201,10 @@ const Album = () => {
         <AlbumCard
           album={albumZustandObj}
           artistId={artistZustandId}
-          handleSave={async (album: AlbumType, artistId: string) => {}}
+          handleSave={async (
+            album: InsertAlbumSchemaType,
+            artistId: string
+          ) => {}}
           deleteAlbum={() => albumId}
           activeSource={"db"}
           role={"master"}
@@ -195,9 +215,12 @@ const Album = () => {
           data={tracks}
           renderItem={({ item }) => (
             <TrackCard
-              track={item as unknown as TrackObjType}
+              track={item}
               artistId={artistZustandId}
-              handleSave={async (track: TrackObjType, artistId: string) => {}}
+              handleSave={async (
+                track: TrackJoinReleaseType,
+                artistId: string
+              ) => {}}
               activeSource={"db"}
             />
           )}

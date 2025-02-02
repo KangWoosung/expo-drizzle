@@ -6,10 +6,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Badge } from "@/components/ui/badge";
 import { useColorScheme } from "nativewind";
 import { getColors } from "@/constants/color";
-import { LastViewedArtistType } from "@/types/lastViewedArtist";
+import { SelectArtistSchemaType } from "@/zod-schemas/artists";
 
 type LastViewedArtistProps = {
-  lastArtist: LastViewedArtistType;
+  lastArtist: SelectArtistSchemaType;
 };
 
 const LastViewedArtist = ({ lastArtist }: LastViewedArtistProps) => {

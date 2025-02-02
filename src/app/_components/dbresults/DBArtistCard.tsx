@@ -14,26 +14,32 @@ https://musicbrainz.org/ws/2/release?artist=b7442f18-d9be-4185-8b51-482510046156
 그리고, album 의 id 로 api 에 쿼리하는 tracks API URL:
 https://musicbrainz.org/ws/2/release/aaf6b030-049a-48e4-a636-6039f0d32a99?inc=recordings&fmt=json
 
+
+
 */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Text, View } from "react-native";
 import { useEffect, useState } from "react";
 import { Pressable } from "react-native-gesture-handler";
 import { useQuery } from "@tanstack/react-query";
-import { AlbumType, ArtistType } from "@/types";
 import { useSQLiteContext } from "expo-sqlite";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { TagType } from "@/types/tagType";
 import Tags from "./_components/Tags";
 import { useColorScheme } from "nativewind";
 import { getColors } from "@/constants/color";
+import {
+  InsertArtistSchemaType,
+  SelectArtistSchemaType,
+} from "@/zod-schemas/artists";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import { count, eq } from "drizzle-orm";
+import { releases, tags, artists, artistTags } from "@/db/drizzle/schema";
 
 type DBArtistCardProps = {
-  artist: ArtistType;
+  artist: InsertArtistSchemaType;
   deleteArtist: (id: string) => void;
 };
 type DBAlbumCountType = {
@@ -45,8 +51,9 @@ export default function DBArtistCard({
   deleteArtist,
 }: DBArtistCardProps) {
   const db = useSQLiteContext();
+  const drizzleDB = drizzle(db);
   const [albumsCnt, setAlbumsCnt] = useState<number>(0);
-  const [tags, setTags] = useState<string[]>([]); // 태그 상태 추가
+  const [currentArtistTags, setCurrentArtistTags] = useState<string[]>([]); // 태그 상태 추가
   const { colorScheme } = useColorScheme();
   const currentColors = getColors(colorScheme as "light" | "dark");
 
@@ -54,28 +61,33 @@ export default function DBArtistCard({
   useEffect(() => {
     const getAlbumsCount = async () => {
       try {
-        const row = await db.getFirstAsync(
-          `SELECT COUNT(*) AS albumsCnt FROM releases WHERE artist_id = ?`,
-          [artist.id]
-        );
-        row && setAlbumsCnt((row as DBAlbumCountType).albumsCnt);
+        const row = await drizzleDB
+          .select({
+            count: count(),
+          })
+          .from(releases)
+          .where(eq(releases.artist_id, artist.id));
+        row && setAlbumsCnt(row[0].count);
       } catch (error) {
         console.error("Error getting albums count:", error);
       }
     };
     getAlbumsCount();
     const getArtistTags = async (artistId: string) => {
-      try {
-        const result = await db.getAllAsync<TagType>(
-          `SELECT name FROM tags WHERE id IN (SELECT tag_id FROM artist_tags WHERE artist_id = ?)`,
-          [artistId]
-        );
-        setTags(result.map((row) => row.name)); // 태그 배열로 변환하여 저장
-        console.log("tags:", tags);
-        console.log("tags....");
-      } catch (error) {
-        console.error("Error getting tags:", error);
-      }
+      const result = await drizzleDB
+        .select({
+          id: tags.id,
+          name: tags.name,
+          count: artistTags.count,
+        })
+        .from(tags)
+        .innerJoin(artistTags, eq(tags.id, artistTags.tagId))
+        .innerJoin(artists, eq(artistTags.artist_id, artists.id))
+        .where(eq(artists.id, artistId));
+
+      setCurrentArtistTags((result?.map((row) => row.name) as string[]) || []); // 태그 배열로 변환하여 저장
+      console.log("tags:", currentArtistTags);
+      console.log("tags....");
     };
     getArtistTags(artist.id);
   }, [artist.id]);
@@ -94,17 +106,18 @@ export default function DBArtistCard({
               {artist.name}
             </Link>
           </CardTitle>
+          {/* DBArtists 에는 count 가 없다.
           {artist.score !== undefined ? (
             <View className="flex items-center space-x-1">
               <Text className="text-sm font-medium">Score:</Text>
               <Text className="text-lg font-bold">{artist.score}</Text>
               <Text className="text-xs text-muted-foreground">/100</Text>
             </View>
-          ) : null}
+          ) : null} */}
         </View>
-        {artist.sort_name && artist.sort_name !== artist.name ? (
+        {artist.sortName && artist.sortName !== artist.name ? (
           <Text className="text-sm text-muted-foreground">
-            {artist.sort_name}
+            {artist.sortName}
           </Text>
         ) : null}
       </CardHeader>
@@ -121,15 +134,14 @@ export default function DBArtistCard({
             <Text className="text-lg text-slate-500">{artist.country}</Text>
           </View>
         ) : null}
-        {artist.begin_date || artist.end_date ? (
+        {/* {artist.begin_date || artist.end_date ? (
           <View className="flex items-left space-x-2">
-            {/* <CalendarIcon className="h-4 w-4 text-muted-foreground" /> */}
             <Text className="text-sm">
               {artist.begin_date || "Unknown"} - {artist.end_date || "Present"}
             </Text>
           </View>
-        ) : null}
-        {artist.albumsCnt ? (
+        ) : null} */}
+        {albumsCnt ? (
           <View className="flex flex-row justify-between">
             <View className="flex flex-row items-center gap-2">
               <Ionicons
@@ -137,7 +149,7 @@ export default function DBArtistCard({
                 size={18}
                 color={"#64748b"}
               />
-              <Text className="text-sm">Albums: {artist.albumsCnt}</Text>
+              <Text className="text-sm">Albums: {albumsCnt}</Text>
             </View>
             <Text className="text-sm">To Albums</Text>
           </View>
@@ -150,7 +162,7 @@ export default function DBArtistCard({
                 color={"#64748b"}
               />
               <Text className="text-lg text-slate-500">
-                Albums: {artist.albumsCnt ? artist.albumsCnt : 0}
+                Albums: {albumsCnt ? albumsCnt : 0}
               </Text>
             </View>
           </View>
@@ -167,7 +179,9 @@ export default function DBArtistCard({
             </Text>
           </View>
         ) : null}
-        {tags && tags.length > 0 ? <Tags tags={tags} /> : null}
+        {currentArtistTags && currentArtistTags.length > 0 ? (
+          <Tags tags={currentArtistTags} />
+        ) : null}
         <View className="flex flex-row justify-between items-left">
           <Badge variant="secondary" className="w-fit">
             <Text>ID: {artist.id}</Text>

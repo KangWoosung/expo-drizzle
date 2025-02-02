@@ -4,31 +4,30 @@
 artist.id 와 album.id 를 zustand 컨텍스트로 유지해준다. 
 */
 
+import { InsertAlbumSchemaType } from "@/zod-schemas/albums";
+import { InsertArtistSchemaType } from "@/zod-schemas/artists";
 import { create } from "zustand";
-import { ArtistType } from "@/types";
-import { AlbumType } from "@/types";
-import { TrackType } from "@/types/trackType";
-import { TagType } from "@/types/tagType";
 
 type ArtistAlbumZustandType = {
   artistZustandId: string;
-  artistZustandObj: ArtistType;
+  artistZustandObj: InsertArtistSchemaType;
   albumZustandId: string;
-  albumZustandObj: AlbumType;
+  albumZustandObj: InsertAlbumSchemaType;
   setArtistZustandId: (artistId: string) => void;
-  setArtistZustandObj: (artist: ArtistType) => void;
+  setArtistZustandObj: (artist: InsertArtistSchemaType) => void;
   setAlbumZustandId: (albumId: string) => void;
-  setAlbumZustandObj: (album: AlbumType) => void;
+  setAlbumZustandObj: (album: InsertAlbumSchemaType) => void;
 };
 
 export const useArtistAlbumZustand = create<ArtistAlbumZustandType>((set) => ({
   artistZustandId: "",
-  artistZustandObj: {} as ArtistType,
+  artistZustandObj: {} as InsertArtistSchemaType,
   albumZustandId: "",
-  albumZustandObj: {} as AlbumType,
+  albumZustandObj: {} as InsertAlbumSchemaType,
   setArtistZustandId: (artistId: string) => set({ artistZustandId: artistId }),
-  setArtistZustandObj: (artist: ArtistType) =>
+  setArtistZustandObj: (artist: InsertArtistSchemaType) =>
     set({ artistZustandObj: artist }),
   setAlbumZustandId: (albumId: string) => set({ albumZustandId: albumId }),
-  setAlbumZustandObj: (album: AlbumType) => set({ albumZustandObj: album }),
+  setAlbumZustandObj: (album: InsertAlbumSchemaType) =>
+    set({ albumZustandObj: album }),
 }));

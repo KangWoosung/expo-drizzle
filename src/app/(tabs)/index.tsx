@@ -23,26 +23,19 @@ Final Code Cleanup
 
 import { View, Text } from "react-native";
 import React, { useEffect, useState } from "react";
-import { useArtistsGetTotal } from "@/hooks";
-import { useArtistsRepository } from "@/db";
 import { MMKV } from "react-native-mmkv";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { getColors } from "@/constants/color";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { AlbumType, ArtistType } from "@/types";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { appName, appPropaganda, iconSize } from "@/constants/tokens";
 import { useIsFocused } from "@react-navigation/native";
-import { Badge } from "@/components/ui/badge";
 import LastViewedArtist from "../_components/cards/LastViewedArtist";
 import LastViewedAlbum from "../_components/cards/LastViewedAlbum";
 import IndexStats from "../_components/stats/IndexStats";
+import { ENV } from "@/constants/env";
+import { iconSize } from "@/constants/tokens";
+import { SelectArtistSchemaType } from "@/zod-schemas/artists";
+import { SelectAlbumSchemaType } from "@/zod-schemas/albums";
 
-// Stack 은 디폴트 비헤이비어로 스크린이 캐시된다.
-// 되돌아 왔을 때, MMKV 데이터는 업데이트되지 않는다.
-// Stack screens are cached by default behavior.
-// When returning, MMKV data is not updated.
 const index = () => {
   const isFocused = useIsFocused(); // 현재 페이지가 활성화되었는지 확인
   const { colorScheme } = useColorScheme();
@@ -53,8 +46,12 @@ const index = () => {
   const [artistsCnt, setArtistsCnt] = useState(0);
   const [albumsCnt, setAlbumsCnt] = useState(0);
   const [tracksCnt, setTracksCnt] = useState(0);
-  const [lastArtist, setLastArtist] = useState<ArtistType | null>(null);
-  const [lastAlbum, setLastAlbum] = useState<AlbumType | null>(null);
+  const [lastArtist, setLastArtist] = useState<SelectArtistSchemaType | null>(
+    null
+  );
+  const [lastAlbum, setLastAlbum] = useState<SelectAlbumSchemaType | null>(
+    null
+  );
 
   // 현재 스크린이 활성화될 때마다, MMKV 데이터를 업데이트한다.
   // Updates MMKV data whenever current screen is activated.
@@ -62,9 +59,6 @@ const index = () => {
     const tempArtistsCnt = storage.getNumber("artistsCnt");
     const tempAlbumsCnt = storage.getNumber("albumsCnt");
     const tempTracksCnt = storage.getNumber("tracksCnt");
-    console.log("tempArtistsCnt:", tempArtistsCnt);
-    console.log("tempAlbumsCnt:", tempAlbumsCnt);
-    console.log("tempTracksCnt:", tempTracksCnt);
     setArtistsCnt(tempArtistsCnt ?? 0);
     setAlbumsCnt(tempAlbumsCnt ?? 0);
     setTracksCnt(tempTracksCnt ?? 0);
@@ -84,9 +78,11 @@ const index = () => {
     <View className="relative p-2 max-w-md mx-auto bg-gray-100 min-h-screen">
       <View className="mb-8 text-center">
         <Text className="text-3xl font-bold text-purple-800 mb-2">
-          {appName}
+          {ENV.APP_NAME}
         </Text>
-        <Text className="text-base text-gray-600 italic">{appPropaganda}</Text>
+        <Text className="text-base text-gray-600 italic">
+          {ENV.APP_PROPAGANDA}
+        </Text>
       </View>
 
       <IndexStats
@@ -116,7 +112,7 @@ const index = () => {
               color: currentColors.foreground,
             }}
           >
-            {appName}
+            {ENV.APP_NAME}
           </Text>
         </View>
       </View>

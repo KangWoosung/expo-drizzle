@@ -14,14 +14,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
-import { avatarObj } from "@/constants/assets";
 import { useColorScheme } from "nativewind";
 import RootStackLayout from "./_components/RootLayout";
-import { SQLiteProvider } from "expo-sqlite";
+import { openDatabaseSync, SQLiteProvider } from "expo-sqlite";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { initDatabase } from "../db";
 import { queryClient } from "@/libs/query-client";
-import { DB_NAME } from "@/constants/db";
 import MigrationFallback from "@/components/fallbacks/MigrationFallback";
 import { Toaster } from "@/components/Toaster";
 import {
@@ -29,7 +26,13 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-const defaultAvatar = require("../assets/images/default-avatar.png");
+import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
+import migrations from "../db/drizzle/migrations/migrations";
+import { ENV } from "@/constants/env";
+
+// const defaultAvatar = require("../assets/images/default-avatar.png");
 
 const Layout = () => {
   const [avatar, setAvatar] = useState({ uri: "" });
@@ -37,9 +40,16 @@ const Layout = () => {
 
   const { colorScheme, setColorScheme, toggleColorScheme } = useColorScheme();
 
+  const expoDB = openDatabaseSync(ENV.DB_NAME);
+  const drizzleDB = drizzle(expoDB);
+  const { success, error } = useMigrations(drizzleDB, migrations);
+
+  // DrizzleStudio
+  useDrizzleStudio(drizzleDB);
+
   // Async Data Fetching 을 나중에 추가...
   useEffect(() => {
-    setAvatar({ uri: avatarObj.uri });
+    setAvatar({ uri: ENV.AVATAR_OBJ.uri });
     setNoticeCnt(1);
   }, []);
 
@@ -56,11 +66,7 @@ const Layout = () => {
             style={colorScheme === "dark" ? "light" : "dark"}
           />
           <Suspense fallback={<MigrationFallback />}>
-            <SQLiteProvider
-              databaseName={DB_NAME}
-              onInit={initDatabase}
-              useSuspense
-            >
+            <SQLiteProvider databaseName={ENV.DB_NAME} useSuspense>
               <QueryClientProvider client={queryClient}>
                 <RootStackLayout
                   avatar={avatar}

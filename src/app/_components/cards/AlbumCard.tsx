@@ -2,13 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { AlbumType } from "@/types";
 import { Link } from "expo-router";
+import { InsertAlbumSchemaType } from "@/zod-schemas/albums";
 
 type ApiAlbumCardProps = {
-  album: AlbumType;
+  album: InsertAlbumSchemaType;
   artistId: string;
-  handleSave: (album: AlbumType, artistId: string) => Promise<void>;
+  handleSave: (album: InsertAlbumSchemaType, artistId: string) => Promise<void>;
   deleteAlbum: (albumId: string) => void;
   activeSource: string;
   role?: string;
@@ -58,14 +58,14 @@ export default function AlbumCard({
           </View>
         ) : null}
 
-        {album.date ? (
+        {album.release_date ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons name="calendar-outline" size={18} color={"#64748b"} />
-            <Text className="text-lg text-slate-500">{album.date}</Text>
+            <Text className="text-lg text-slate-500">{album.release_date}</Text>
           </View>
         ) : null}
 
-        {album.packaging && album.packaging !== "None" ? (
+        {album.packaging ? (
           <View className="flex flex-row items-center gap-2">
             <Ionicons name="calendar-outline" size={18} color={"#64748b"} />
             <Text className="text-lg text-slate-500">{album.packaging}</Text>

@@ -1,0 +1,99 @@
+// Artists table
+Table artists {
+  id text [pk]
+  name text [not null]
+  sort_name text
+  type text [default: 'person', note: 'enum: person, group, orchestra, choir, character, other']
+  country text [default: 'XXA']
+  disambiguation text
+}
+
+// Releases table
+Table releases {
+  id text [pk]
+  title text [not null]
+  artist_id text [ref: > artists.id, not null]
+  status text [default: 'official']
+  release_date text
+  country text
+  disambiguation text
+  packaging text
+}
+
+// Recordings table
+Table recordings {
+  id text [pk]
+  title text [not null]
+  length integer [note: 'milliseconds']
+  disambiguation text
+  artist_id text [ref: > artists.id]
+}
+
+// Release-Recording relationship table
+Table release_recordings {
+  release_id text [ref: > releases.id]
+  recording_id text [ref: > recordings.id]
+  track_position integer
+  disc_number integer [default: 1]
+
+  indexes {
+    (release_id, recording_id) [pk]
+  }
+}
+
+// Artist Credit Names table
+Table artist_credits {
+  recording_id text [ref: > recordings.id]
+  artist_id text [ref: > artists.id]
+  join_phrase text
+  name text
+
+  indexes {
+    (recording_id, artist_id) [pk]
+  }
+}
+
+// Tags table
+Table tags {
+  id integer [pk, increment]
+  name text [not null, unique]
+}
+
+// Artist Tags relationship table
+Table artist_tags {
+  artist_id text [ref: > artists.id]
+  tag_id integer [ref: > tags.id]
+  count integer [default: 1]
+
+  indexes {
+    (artist_id, tag_id) [pk]
+  }
+}
+
+// Release Tags relationship table
+Table release_tags {
+  release_id text [ref: > releases.id]
+  tag_id integer [ref: > tags.id]
+  count integer [default: 1]
+
+  indexes {
+    (release_id, tag_id) [pk]
+  }
+}
+
+// Recording Tags relationship table
+Table recording_tags {
+  recording_id text [ref: > recordings.id]
+  tag_id integer [ref: > tags.id]
+  count integer [default: 1]
+
+  indexes {
+    (recording_id, tag_id) [pk]
+  }
+}
+
+// Test table
+Table test_table {
+  id integer [pk, increment]
+  name text [not null]
+} 
